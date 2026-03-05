@@ -43,5 +43,5 @@ ENV CHROME_BIN_PATH=/usr/bin/google-chrome
 
 EXPOSE 8000
 
-# Use xvfb-run with -a to automatically allocate a virtual display for headed Chrome execution securely
-CMD ["xvfb-run", "-a", "-e", "/dev/stdout", "--server-args=-screen 0 1024x768x24", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Temporarily run Uvicorn naked without Xvfb to diagnose if X11 is deadlocking the container boot
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
