@@ -40,8 +40,9 @@ COPY . .
 # Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV CHROME_BIN_PATH=/usr/bin/google-chrome
+ENV DISPLAY=:99
 
 EXPOSE 8000
 
-# Temporarily run Uvicorn naked without Xvfb to diagnose if X11 is deadlocking the container boot
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start Xvfb in the background explicitly, bypassing the broken xvfb-run wrapper, then start Uvicorn
+CMD Xvfb :99 -screen 0 1024x768x24 & uvicorn main:app --host 0.0.0.0 --port 8000
