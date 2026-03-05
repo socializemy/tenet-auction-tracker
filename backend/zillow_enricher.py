@@ -121,7 +121,7 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
         query = f"{address} {city} {state} house exterior"
         url = f"https://www.google.com/search?tbm=isch&q={query.replace(' ', '+')}"
 
-        try:
+        async def _do_playwright_search():
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=True)
                 context = await browser.new_context(
@@ -149,6 +149,10 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
                         break
 
                 await browser.close()
+                
+        try:
+            # Wrap in a hard timeout to prevent silent container hanging
+            await asyncio.wait_for(_do_playwright_search(), timeout=30.0)
         except Exception as e:
             logger.warning(f"Google Image enrichment error for '{address}': {e}")
 
