@@ -208,8 +208,8 @@ async def enrich_properties_zillow(db_session, properties_to_enrich):
             prop.apn = data["apn"]
             changed = True
             
-        if changed and not prop.zillow_url:
-            # Fallback to a Zillow search link since we can't scrape the direct property ID url
+        # Always set a fallback URL so we don't endlessly re-queue properties that Google/DDG cannot find
+        if not prop.zillow_url:
             zillow_query = f"{prop.address}-{prop.city}-WA".replace(" ", "-").replace(",", "")
             prop.zillow_url = f"https://www.zillow.com/homes/{zillow_query}_rb/"
             changed = True

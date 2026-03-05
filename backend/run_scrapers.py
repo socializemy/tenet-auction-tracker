@@ -85,12 +85,8 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
         if enrich_zillow:
             from sqlalchemy import or_
             unenriched = db.query(Property).filter(
-                or_(
-                    Property.estimated_value.is_(None),
-                    Property.image_url.is_(None),
-                    Property.bedrooms.is_(None)
-                )
-            ).limit(200).all()  # Increased limit to 200 so Xome properties at the bottom of the queue get reached on fresh deploys
+                Property.zillow_url.is_(None)
+            ).limit(200).all()  # Increased limit so newly scraped pipelines get fully parsed
             zillow_count = await enrich_properties_zillow(db, unenriched)
         else:
             zillow_count = 0
