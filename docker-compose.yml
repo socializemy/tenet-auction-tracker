@@ -5,7 +5,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: auction_backend
     environment:
       - CHROME_BIN_PATH=/usr/bin/google-chrome
       - DATABASE_URL=sqlite:////app/data/auction_data.db
@@ -24,7 +23,6 @@ services:
       args:
         # Build with empty API URL so Nginx forwards /api requests natively to the backend
         - VITE_API_URL=""
-    container_name: auction_frontend
     ports:
       - "8080:80"
     depends_on:
