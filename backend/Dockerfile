@@ -39,9 +39,8 @@ COPY . .
 # Environment variables
 # We configure our scrapers to check this var to know where the native Chrome binary lives on Linux
 ENV CHROME_BIN_PATH=/usr/bin/google-chrome
-ENV DISPLAY=:99
 
 EXPOSE 8000
 
-# Use xvfb-run to provide a virtual display for headed Chrome execution
-CMD ["xvfb-run", "--server-args=-screen 0 1024x768x24", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use xvfb-run with -a to automatically allocate a virtual display for headed Chrome execution securely
+CMD ["xvfb-run", "-a", "--server-args=-screen 0 1024x768x24", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
