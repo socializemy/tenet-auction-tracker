@@ -38,64 +38,64 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
             
             for res in soup.find_all('div', class_='result'):
                 title_elem = res.find('h2', class_='result__title')
-            desc_elem = res.find('a', class_='result__snippet')
+                desc_elem = res.find('a', class_='result__snippet')
             
-            title = title_elem.text.strip() if title_elem else ""
-            desc = desc_elem.text.strip() if desc_elem else ""
+                title = title_elem.text.strip() if title_elem else ""
+                desc = desc_elem.text.strip() if desc_elem else ""
             
-            combined = title + " " + desc
+                combined = title + " " + desc
             
-            # Value extraction
-            if result["estimated_value"] is None:
-                zmatches = re.findall(r'(?:Zestimate|Estimated value|price.*?changed to|Est\. Value).*?\$([0-9,]+)', combined, re.IGNORECASE)
-                if zmatches:
-                    val_str = zmatches[0].replace(',', '')
-                    result["estimated_value"] = int(val_str)
+                # Value extraction
+                if result["estimated_value"] is None:
+                    zmatches = re.findall(r'(?:Zestimate|Estimated value|price.*?changed to|Est\. Value).*?\$([0-9,]+)', combined, re.IGNORECASE)
+                    if zmatches:
+                        val_str = zmatches[0].replace(',', '')
+                        result["estimated_value"] = int(val_str)
             
-            # Beds extraction
-            if result["bedrooms"] is None:
-                beds_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:bed|beds|bd|-bed)', combined, re.IGNORECASE)
-                if beds_matches:
-                    result["bedrooms"] = float(beds_matches[0])
+                # Beds extraction
+                if result["bedrooms"] is None:
+                    beds_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:bed|beds|bd|-bed)', combined, re.IGNORECASE)
+                    if beds_matches:
+                        result["bedrooms"] = float(beds_matches[0])
                     
-            # Baths extraction
-            if result["bathrooms"] is None:
-                baths_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:bath|baths|ba|-bath)', combined, re.IGNORECASE)
-                if baths_matches:
-                    result["bathrooms"] = float(baths_matches[0])
+                # Baths extraction
+                if result["bathrooms"] is None:
+                    baths_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:bath|baths|ba|-bath)', combined, re.IGNORECASE)
+                    if baths_matches:
+                        result["bathrooms"] = float(baths_matches[0])
                     
-            # Sqft extraction
-            if result["square_feet"] is None:
-                sqft_matches = re.findall(r'([0-9,]+)\s*(?:sqft|sq\.?\s*ft\.?|square feet)', combined, re.IGNORECASE)
-                if sqft_matches:
-                    result["square_feet"] = int(sqft_matches[0].replace(',', ''))
+                # Sqft extraction
+                if result["square_feet"] is None:
+                    sqft_matches = re.findall(r'([0-9,]+)\s*(?:sqft|sq\.?\s*ft\.?|square feet)', combined, re.IGNORECASE)
+                    if sqft_matches:
+                        result["square_feet"] = int(sqft_matches[0].replace(',', ''))
                     
-            # Year Built extraction
-            if result["year_built"] is None:
-                year_matches = re.findall(r'(?:built in|built|year built)\s*(\d{4})', combined, re.IGNORECASE)
-                if year_matches:
-                    result["year_built"] = int(year_matches[0])
+                # Year Built extraction
+                if result["year_built"] is None:
+                    year_matches = re.findall(r'(?:built in|built|year built)\s*(\d{4})', combined, re.IGNORECASE)
+                    if year_matches:
+                        result["year_built"] = int(year_matches[0])
                     
-            # Property Type extraction
-            if result["property_type"] is None:
-                if re.search(r'single(\s|-)family', combined, re.IGNORECASE):
-                    result["property_type"] = "Single Family"
-                elif re.search(r'condo', combined, re.IGNORECASE):
-                    result["property_type"] = "Condominium"
-                elif re.search(r'townhouse|townhome', combined, re.IGNORECASE):
-                    result["property_type"] = "Townhouse"
-                elif re.search(r'multi(\s|-)family|duplex|triplex|fourplex', combined, re.IGNORECASE):
-                    result["property_type"] = "Multi-Family"
+                # Property Type extraction
+                if result["property_type"] is None:
+                    if re.search(r'single(\s|-)family', combined, re.IGNORECASE):
+                        result["property_type"] = "Single Family"
+                    elif re.search(r'condo', combined, re.IGNORECASE):
+                        result["property_type"] = "Condominium"
+                    elif re.search(r'townhouse|townhome', combined, re.IGNORECASE):
+                        result["property_type"] = "Townhouse"
+                    elif re.search(r'multi(\s|-)family|duplex|triplex|fourplex', combined, re.IGNORECASE):
+                        result["property_type"] = "Multi-Family"
                     
-            # Lot Size extraction
-            if result["lot_size"] is None:
-                lot_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:acres|acre lot|acre|sqft lot)', combined, re.IGNORECASE)
-                if lot_matches:
-                    result["lot_size"] = f"{lot_matches[0]} Acres" if 'acre' in combined.lower() else f"{lot_matches[0]} sqft"
+                # Lot Size extraction
+                if result["lot_size"] is None:
+                    lot_matches = re.findall(r'(\d+(?:\.\d+)?)\s*(?:acres|acre lot|acre|sqft lot)', combined, re.IGNORECASE)
+                    if lot_matches:
+                        result["lot_size"] = f"{lot_matches[0]} Acres" if 'acre' in combined.lower() else f"{lot_matches[0]} sqft"
                     
-            # Check if primary values are found to break early
-            if result.get("estimated_value") and result.get("bedrooms") and result.get("bathrooms") and result.get("square_feet") and result.get("year_built"):
-                break
+                # Check if primary values are found to break early
+                if result.get("estimated_value") and result.get("bedrooms") and result.get("bathrooms") and result.get("square_feet") and result.get("year_built"):
+                    break
         except Exception as e:
             logger.warning(f"DDG estimate extraction error for '{address}': {e}")
 
