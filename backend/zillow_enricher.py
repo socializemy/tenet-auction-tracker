@@ -170,7 +170,11 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
     Rate-limited: 1 request per 3 seconds.
     """
     enriched = 0
-    for prop in properties_to_enrich:
+    total = len(properties_to_enrich)
+    for idx, prop in enumerate(properties_to_enrich):
+        if status_dict is not None:
+            status_dict["status_text"] = f"Enriching Data ({idx+1}/{total}): {prop.address}"
+            
         needs_image = not prop.image_url
         needs_estimate = not prop.estimated_value or not prop.bedrooms or not prop.bathrooms or not prop.square_feet or not prop.year_built or not prop.property_type or not prop.lot_size
         needs_apn = not prop.apn
