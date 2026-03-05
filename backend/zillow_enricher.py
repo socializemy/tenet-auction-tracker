@@ -154,7 +154,7 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
 
     return result
 
-async def enrich_properties_zillow(db_session, properties_to_enrich):
+async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict=None):
     """
     Given a list of Property ORM objects missing image or estimate data,
     fetch data for each and update the DB.
