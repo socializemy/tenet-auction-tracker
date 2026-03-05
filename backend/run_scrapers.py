@@ -90,7 +90,7 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
                     Property.image_url.is_(None),
                     Property.bedrooms.is_(None)
                 )
-            ).limit(50).all()  # Limit per run to avoid long delays
+            ).limit(200).all()  # Increased limit to 200 so Xome properties at the bottom of the queue get reached on fresh deploys
             zillow_count = await enrich_properties_zillow(db, unenriched)
         else:
             zillow_count = 0
