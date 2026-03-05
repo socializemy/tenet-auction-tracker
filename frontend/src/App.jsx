@@ -19,34 +19,52 @@ function App() {
 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const loadProperties = useCallback(async () => {
-    setLoading(true);
+  const loadProperties = useCallback(async (silent = false) => {
+    if (silent !== true) setLoading(true);
     try {
       const data = await fetchProperties(filters);
       setProperties(data);
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      if (silent !== true) setLoading(false);
     }
   }, [filters]);
 
   useEffect(() => { loadProperties(); }, [loadProperties]);
 
-  // Poll scrape status while scraping
+  // Check initial scrape status on mount
   useEffect(() => {
-    if (!scraping) return;
+    fetchScrapeStatus().then(status => {
+      if (status && status.running) {
+        setScraping(true);
+        setScrapeMsg('Scraping in progress (loading live data)...');
+      }
+    }).catch(e => console.error(e));
+  }, []);
+
+  // Poll scrape status continuously to sync across tabs/refreshes and dynamically load enriched properties
+  useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const status = await fetchScrapeStatus();
-        if (!status.running) {
+
+        // If it's running, dynamically pull new properties so the user sees real-time Zillow images loading
+        if (status.running) {
+          loadProperties(true);
+        }
+
+        if (status.running && !scraping) {
+          setScraping(true);
+          setScrapeMsg('Scraping in progress (loading live data)...');
+        } else if (!status.running && scraping) {
           setScraping(false);
-          setScrapeMsg(`Done! ${status.total_scraped ?? 0} scraped, ${status.dedup_stats?.inserted ?? 0} new`);
-          loadProperties();
+          setScrapeMsg(`Done! ${status.total_scraped ?? 0} scraped`);
+          loadProperties(true);
           setTimeout(() => setScrapeMsg(''), 6000);
         }
       } catch (e) { /* ignore */ }
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [scraping, loadProperties]);
 
