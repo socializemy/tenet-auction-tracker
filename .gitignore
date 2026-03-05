@@ -1,0 +1,9 @@
+node_modules/
+dist/
+venv/
+__pycache__/
+*.pyc
+.env
+auction_data.db
+spokane-auction.tar.gz
+.DS_Store

@@ -1,0 +1,727 @@
+INFO:     Will watch for changes in these directories: ['/Users/coryjames/.gemini/antigravity/scratch/spokane-auction-properties/backend']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [64683] using WatchFiles
+INFO:     Started server process [64769]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:57126 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57126 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57163 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57163 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57189 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57189 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "POST /api/trigger-scrape HTTP/1.1" 200 OK
+INFO:run_scrapers:Running scraper: Nationwide Posting
+INFO:scrapers.base:Starting scrape for Nationwide Posting
+INFO:scrapers.nationwide:Navigating to https://search.nationwideposting.com/SearchTerms.aspx
+INFO:scrapers.nationwide:Accepted Terms of Use
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:Selected state: WA
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:County dropdown not found or failed — will filter after search
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:Clicked search button
+INFO:scrapers.nationwide:Parsing results page 1...
+INFO:scrapers.nationwide:Found 4 Spokane properties so far on page 1
+INFO:scrapers.nationwide:Nationwide: scraped 4 Spokane properties total
+INFO:scrapers.base:Successfully scraped 4 properties from Nationwide Posting
+INFO:run_scrapers:Nationwide Posting: 4 properties found
+INFO:run_scrapers:Running scraper: Quality Loan
+INFO:scrapers.base:Starting scrape for Quality Loan
+INFO:scrapers.quality_loan:Navigating to Quality Loan login page
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.quality_loan:Login successful
+INFO:scrapers.quality_loan:Navigating to File Search page
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.quality_loan:No county dropdown found. Using address search with JS validation disabled.
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+WARNING:scrapers.quality_loan:Search submit issue (may have navigated anyway): Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until 'networkidle'
+============================================================
+INFO:scrapers.quality_loan:Parsing Quality Loan results page 1...
+WARNING:scrapers.quality_loan:No data rows found in Quality Loan results
+INFO:scrapers.quality_loan:Quality Loan: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Quality Loan
+INFO:run_scrapers:Quality Loan: 0 properties found
+INFO:run_scrapers:Running scraper: Clear Recon WA
+INFO:scrapers.base:Starting scrape for Clear Recon WA
+INFO:scrapers.clearrecon:Navigating to https://clearrecon-wa.com/washington-listings/
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.clearrecon:Found 0 rows on Clear Recon WA page
+INFO:scrapers.clearrecon:Clear Recon WA: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Clear Recon WA
+INFO:run_scrapers:Clear Recon WA: 0 properties found
+INFO:run_scrapers:Running scraper: Auction.com
+INFO:scrapers.base:Starting scrape for Auction.com
+INFO:scrapers.auction_com:Navigating to https://www.auction.com/residential/wa/spokane-county/
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.auction_com:Parsing Auction.com page 1...
+INFO:scrapers.auction_com:Found 0 property cards
+WARNING:scrapers.auction_com:No card elements found — trying JSON-LD structured data
+INFO:scrapers.auction_com:Auction.com: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Auction.com
+INFO:run_scrapers:Auction.com: 0 properties found
+INFO:run_scrapers:Running scraper: Xome
+INFO:scrapers.base:Starting scrape for Xome
+INFO:scrapers.xome:Navigating to https://www.xome.com/homes-for-sale/filter/state-WA/county-Spokane
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.xome:Parsing Xome page 1...
+WARNING:scrapers.xome:No Xome listing cards found
+INFO:scrapers.xome:Xome: scraped 0 properties
+INFO:scrapers.base:Successfully scraped 0 properties from Xome
+INFO:run_scrapers:Xome: 0 properties found
+INFO:run_scrapers:Running scraper: Elite Post & Pub
+INFO:scrapers.base:Starting scrape for Elite Post & Pub
+INFO:scrapers.elitepostandpub:Navigating to https://elitepostandpub.com/index.php
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.elitepostandpub:Elite Post: found 0 rows
+INFO:scrapers.elitepostandpub:Elite Post & Pub: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Elite Post & Pub
+INFO:run_scrapers:Elite Post & Pub: 0 properties found
+INFO:run_scrapers:Running scraper: Aztec Trustee WA
+INFO:scrapers.base:Starting scrape for Aztec Trustee WA
+INFO:scrapers.aztectrustee:Navigating to https://www.aztectrustee-wa.com/
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.aztectrustee:Aztec Trustee: found 0 rows
+INFO:scrapers.aztectrustee:Aztec Trustee WA: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Aztec Trustee WA
+INFO:run_scrapers:Aztec Trustee WA: 0 properties found
+INFO:run_scrapers:Running scraper: Stox Posting
+INFO:scrapers.base:Starting scrape for Stox Posting
+INFO:scrapers.stoxposting:Navigating to https://www.stoxposting.com/
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.stoxposting:Stox Posting: found 0 rows
+INFO:scrapers.stoxposting:Stox Posting: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Stox Posting
+INFO:run_scrapers:Stox Posting: 0 properties found
+INFO:run_scrapers:Running scraper: ServiceLink ASAP
+INFO:scrapers.base:Starting scrape for ServiceLink ASAP
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.servicelinkasap:Navigating to https://www.servicelinkasap.com/quicksearch.aspx
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.servicelinkasap:Submitted ServiceLink search
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.servicelinkasap:ServiceLink: found 9 rows
+INFO:scrapers.servicelinkasap:ServiceLink ASAP: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from ServiceLink ASAP
+INFO:run_scrapers:ServiceLink ASAP: 0 properties found
+INFO:run_scrapers:Running scraper: InsourceLogic
+INFO:scrapers.base:Starting scrape for InsourceLogic
+WARNING:scrapers.insourcelogic:InsourceLogic credentials not configured — skipping
+INFO:scrapers.base:Successfully scraped 0 properties from InsourceLogic
+INFO:run_scrapers:InsourceLogic: 0 properties found
+INFO:deduplication:Dedup complete: {'inserted': 0, 'updated': 4, 'merged_sources': 0}
+INFO:zillow_enricher:Fetching Zillow data for: 1117 S ASPEN PL
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:No Zillow results for: 1117 S ASPEN PL
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:Fetching Zillow data for: 3714 E 5TH AVE
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:No Zillow results for: 3714 E 5TH AVE
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:Fetching Zillow data for: 1875 N. Willamette Rd.
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:No Zillow results for: 1875 N. Willamette Rd.
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:Fetching Zillow data for: 3718/3720 S PHOEBE ST
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:No Zillow results for: 3718/3720 S PHOEBE ST
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:zillow_enricher:Zillow enrichment complete: 0 properties updated
+INFO:     127.0.0.1:57194 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57194 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57406 - "GET /api/properties?city=Spokane+Valley&sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57424 - "GET /api/properties?city=Spokane+Valley&sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57426 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57424 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57471 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57471 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57469 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57543 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57543 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57603 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57603 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?sort_by=starting_bid HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?sort_by=estimated_value HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?city=Cheney&sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?city=Deer+Park&sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57657 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [64769]
+INFO:     Started server process [68882]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'venv/lib/python3.14/site-packages/httpx/_transports/base.py', 'venv/lib/python3.14/site-packages/httpcore/_async/interfaces.py', 'venv/lib/python3.14/site-packages/httpx/_multipart.py', 'venv/lib/python3.14/site-packages/httpx/_exceptions.py', 'venv/lib/python3.14/site-packages/httpcore/_ssl.py', 'venv/lib/python3.14/site-packages/httpcore/_api.py', 'venv/lib/python3.14/site-packages/httpcore/_async/__init__.py', 'venv/lib/python3.14/site-packages/twocaptcha/solver.py', 'venv/lib/python3.14/site-packages/httpx/_main.py', 'venv/lib/python3.14/site-packages/httpx/_decoders.py', 'venv/lib/python3.14/site-packages/twocaptcha/__init__.py', 'venv/lib/python3.14/site-packages/aiofiles/ospath.py', 'venv/lib/python3.14/site-packages/httpcore/_exceptions.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/__init__.py', 'venv/lib/python3.14/site-packages/httpx/_transports/__init__.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/sync.py', 'venv/lib/python3.14/site-packages/httpcore/_utils.py', 'venv/lib/python3.14/site-packages/httpx/_config.py', 'venv/lib/python3.14/site-packages/twocaptcha/exceptions/__init__.py', 'venv/lib/python3.14/site-packages/twocaptcha/async_solver.py', 'venv/lib/python3.14/site-packages/httpcore/_async/connection.py', 'venv/lib/python3.14/site-packages/httpx/_api.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/__init__.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/mock.py', 'venv/lib/python3.14/site-packages/httpcore/_async/http11.py', 'venv/lib/python3.14/site-packages/aiofiles/base.py', 'venv/lib/python3.14/site-packages/httpx/_content.py', 'venv/lib/python3.14/site-packages/httpcore/__init__.py', 'venv/lib/python3.14/site-packages/httpx/_client.py', 'venv/lib/python3.14/site-packages/httpx/_transports/asgi.py', 'venv/lib/python3.14/site-packages/httpx/__init__.py', 'venv/lib/python3.14/site-packages/httpx/_models.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/connection.py', 'venv/lib/python3.14/site-packages/httpx/_urls.py', 'venv/lib/python3.14/site-packages/httpcore/_trace.py', 'venv/lib/python3.14/site-packages/httpcore/_models.py', 'venv/lib/python3.14/site-packages/httpx/_transports/mock.py', 'venv/lib/python3.14/site-packages/twocaptcha/exceptions/solver.py', 'venv/lib/python3.14/site-packages/twocaptcha/api.py', 'venv/lib/python3.14/site-packages/twocaptcha/exceptions/api.py', 'venv/lib/python3.14/site-packages/aiofiles/os.py', 'venv/lib/python3.14/site-packages/httpx/__version__.py', 'venv/lib/python3.14/site-packages/twocaptcha/async_api.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/http11.py', 'venv/lib/python3.14/site-packages/httpx/_transports/wsgi.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/interfaces.py', 'venv/lib/python3.14/site-packages/httpx/_status_codes.py', 'venv/lib/python3.14/site-packages/aiofiles/threadpool/utils.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/http_proxy.py', 'venv/lib/python3.14/site-packages/httpx/_auth.py', 'venv/lib/python3.14/site-packages/aiofiles/threadpool/text.py', 'venv/lib/python3.14/site-packages/aiofiles/threadpool/__init__.py', 'venv/lib/python3.14/site-packages/httpcore/_async/socks_proxy.py', 'venv/lib/python3.14/site-packages/aiofiles/threadpool/binary.py', 'venv/lib/python3.14/site-packages/httpx/_utils.py', 'venv/lib/python3.14/site-packages/httpx/_urlparse.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/socks_proxy.py', 'venv/lib/python3.14/site-packages/httpcore/_async/http2.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/connection_pool.py', 'venv/lib/python3.14/site-packages/httpcore/_synchronization.py', 'venv/lib/python3.14/site-packages/aiofiles/tempfile/temptypes.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/anyio.py', 'venv/lib/python3.14/site-packages/httpcore/_async/connection_pool.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/trio.py', 'venv/lib/python3.14/site-packages/httpx/_types.py', 'venv/lib/python3.14/site-packages/aiofiles/tempfile/__init__.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/auto.py', 'venv/lib/python3.14/site-packages/httpcore/_backends/base.py', 'venv/lib/python3.14/site-packages/aiofiles/__init__.py', 'venv/lib/python3.14/site-packages/httpcore/_sync/http2.py', 'venv/lib/python3.14/site-packages/httpcore/_async/http_proxy.py', 'venv/lib/python3.14/site-packages/httpx/_transports/default.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [68882]
+INFO:     Started server process [73633]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:58571 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58573 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58571 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58573 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58571 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58571 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59053 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59053 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59053 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59053 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [73633]
+INFO:     Started server process [91120]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [91120]
+INFO:     Started server process [92560]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [92560]
+INFO:     Started server process [96386]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:61007 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61007 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61007 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61007 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61017 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61017 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61610 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61610 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61610 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61610 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61618 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61618 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'test_redfin_api.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [96386]
+INFO:     Started server process [98706]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_redfin_api.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [98706]
+INFO:     Started server process [98713]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_redfin_addresses.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [98713]
+INFO:     Started server process [98865]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_redfin_addresses.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [98865]
+INFO:     Started server process [99050]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_2captcha_get.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99050]
+INFO:     Started server process [99235]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_realtor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99235]
+INFO:     Started server process [99387]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_realtor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99387]
+INFO:     Started server process [99568]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_realtor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99568]
+INFO:     Started server process [99731]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_realtor.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99731]
+INFO:     Started server process [99891]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_zillow_mouse.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [99891]
+WARNING:  WatchFiles detected changes in 'test_zillow_mouse.py'. Reloading...
+INFO:     Started server process [163]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [163]
+INFO:     Started server process [164]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_img.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [164]
+INFO:     Started server process [358]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_img.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [358]
+INFO:     Started server process [585]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [585]
+INFO:     Started server process [824]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_img.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [824]
+INFO:     Started server process [1656]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1656]
+INFO:     Started server process [1821]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:63682 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63682 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'test_google_img_highres.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1821]
+INFO:     Started server process [3352]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_img_highres.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3352]
+INFO:     Started server process [3527]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_img_highres.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3527]
+INFO:     Started server process [3693]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3693]
+INFO:     Started server process [3863]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64301 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64301 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64432 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64432 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64432 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64432 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3863]
+INFO:     Started server process [5590]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5590]
+INFO:     Started server process [6764]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64525 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64525 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'test_google_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [6764]
+INFO:     Started server process [7516]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7516]
+INFO:     Started server process [7681]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_google_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7681]
+INFO:     Started server process [7843]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_bing_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7843]
+INFO:     Started server process [8006]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_ddg_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8006]
+INFO:     Started server process [8169]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_redfin_api.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8169]
+INFO:     Started server process [8337]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:64951 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64951 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'test_raw_requests.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8337]
+INFO:     Started server process [8506]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'venv/lib/python3.14/site-packages/bs4/builder/_lxml.py', 'venv/lib/python3.14/site-packages/bs4/dammit.py', 'venv/lib/python3.14/site-packages/bs4/exceptions.py', 'venv/lib/python3.14/site-packages/bs4/css.py', 'venv/lib/python3.14/site-packages/soupsieve/__init__.py', 'venv/lib/python3.14/site-packages/bs4/_warnings.py', 'venv/lib/python3.14/site-packages/soupsieve/css_match.py', 'venv/lib/python3.14/site-packages/bs4/filter.py', 'venv/lib/python3.14/site-packages/bs4/_typing.py', 'venv/lib/python3.14/site-packages/bs4/builder/__init__.py', 'venv/lib/python3.14/site-packages/soupsieve/css_parser.py', 'venv/lib/python3.14/site-packages/soupsieve/__meta__.py', 'venv/lib/python3.14/site-packages/bs4/__init__.py', 'venv/lib/python3.14/site-packages/bs4/builder/_htmlparser.py', 'venv/lib/python3.14/site-packages/bs4/builder/_html5lib.py', 'venv/lib/python3.14/site-packages/bs4/diagnose.py', 'venv/lib/python3.14/site-packages/bs4/formatter.py', 'venv/lib/python3.14/site-packages/soupsieve/util.py', 'venv/lib/python3.14/site-packages/soupsieve/pretty.py', 'venv/lib/python3.14/site-packages/bs4/_deprecation.py', 'venv/lib/python3.14/site-packages/bs4/element.py', 'venv/lib/python3.14/site-packages/soupsieve/css_types.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8506]
+INFO:     Started server process [8762]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_raw_requests.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8762]
+INFO:     Started server process [8852]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8852]
+INFO:     Started server process [9009]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'run_scrapers.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9009]
+INFO:     Started server process [9015]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9015]
+INFO:     Started server process [9019]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65200 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65200 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9019]
+INFO:     Started server process [9310]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65288 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65288 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'database.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9310]
+INFO:     Started server process [9766]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9766]
+INFO:     Started server process [10079]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_regex.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10079]
+INFO:     Started server process [10697]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10697]
+INFO:     Started server process [10838]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'run_scrapers.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10838]
+INFO:     Started server process [10871]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10871]
+INFO:     Started server process [11383]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'test_ddg_zestimate.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11383]
+INFO:     Started server process [11713]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  WatchFiles detected changes in 'zillow_enricher.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11713]
+INFO:     Started server process [12066]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50009 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50009 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:  WatchFiles detected changes in 'main.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [12066]
+INFO:     Started server process [13798]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:50216 - "GET /api/properties HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50229 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50229 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50290 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50290 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50354 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50354 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "POST /api/trigger-scrape HTTP/1.1" 200 OK
+INFO:run_scrapers:Running scraper: Nationwide Posting
+INFO:scrapers.base:Starting scrape for Nationwide Posting
+INFO:scrapers.nationwide:Navigating to https://search.nationwideposting.com/SearchTerms.aspx
+INFO:scrapers.nationwide:Accepted Terms of Use
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:Selected state: WA
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:County dropdown not found or failed — will filter after search
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.nationwide:Clicked search button
+INFO:scrapers.nationwide:Parsing results page 1...
+INFO:scrapers.nationwide:Found 4 Spokane properties so far on page 1
+INFO:scrapers.nationwide:Nationwide: scraped 4 Spokane properties total
+INFO:scrapers.base:Successfully scraped 4 properties from Nationwide Posting
+INFO:run_scrapers:Nationwide Posting: 4 properties found
+INFO:run_scrapers:Running scraper: Quality Loan
+INFO:scrapers.base:Starting scrape for Quality Loan
+INFO:scrapers.quality_loan:Navigating to Quality Loan login page
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.quality_loan:Login successful
+INFO:scrapers.quality_loan:Navigating to File Search page
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:scrapers.quality_loan:No county dropdown found. Using address search with JS validation disabled.
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/scrape-status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50383 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+WARNING:scrapers.quality_loan:Search submit issue (may have navigated anyway): Timeout 20000ms exceeded.
+=========================== logs ===========================
+waiting for navigation until 'networkidle'
+============================================================
+INFO:scrapers.quality_loan:Parsing Quality Loan results page 1...
+WARNING:scrapers.quality_loan:No data rows found in Quality Loan results
+INFO:scrapers.quality_loan:Quality Loan: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Quality Loan
+INFO:run_scrapers:Quality Loan: 0 properties found
+INFO:run_scrapers:Running scraper: Clear Recon WA
+INFO:scrapers.base:Starting scrape for Clear Recon WA
+INFO:scrapers.clearrecon:Navigating to https://clearrecon-wa.com/washington-listings/
+INFO:scrapers.clearrecon:Found 0 rows on Clear Recon WA page
+INFO:scrapers.clearrecon:Clear Recon WA: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Clear Recon WA
+INFO:run_scrapers:Clear Recon WA: 0 properties found
+INFO:run_scrapers:Running scraper: Auction.com
+INFO:scrapers.base:Starting scrape for Auction.com
+INFO:scrapers.auction_com:Navigating to https://www.auction.com/residential/wa/spokane-county/
+INFO:scrapers.auction_com:Parsing Auction.com page 1...
+INFO:scrapers.auction_com:Found 0 property cards
+WARNING:scrapers.auction_com:No card elements found — trying JSON-LD structured data
+INFO:scrapers.auction_com:Auction.com: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Auction.com
+INFO:run_scrapers:Auction.com: 0 properties found
+INFO:run_scrapers:Running scraper: Xome
+INFO:scrapers.base:Starting scrape for Xome
+INFO:scrapers.xome:Navigating to https://www.xome.com/homes-for-sale/filter/state-WA/county-Spokane
+INFO:scrapers.xome:Parsing Xome page 1...
+WARNING:scrapers.xome:No Xome listing cards found
+INFO:scrapers.xome:Xome: scraped 0 properties
+INFO:scrapers.base:Successfully scraped 0 properties from Xome
+INFO:run_scrapers:Xome: 0 properties found
+INFO:run_scrapers:Running scraper: Elite Post & Pub
+INFO:scrapers.base:Starting scrape for Elite Post & Pub
+INFO:scrapers.elitepostandpub:Navigating to https://elitepostandpub.com/index.php
+INFO:scrapers.elitepostandpub:Elite Post: found 0 rows
+INFO:scrapers.elitepostandpub:Elite Post & Pub: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Elite Post & Pub
+INFO:run_scrapers:Elite Post & Pub: 0 properties found
+INFO:run_scrapers:Running scraper: Aztec Trustee WA
+INFO:scrapers.base:Starting scrape for Aztec Trustee WA
+INFO:scrapers.aztectrustee:Navigating to https://www.aztectrustee-wa.com/
+INFO:scrapers.aztectrustee:Aztec Trustee: found 0 rows
+INFO:scrapers.aztectrustee:Aztec Trustee WA: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Aztec Trustee WA
+INFO:run_scrapers:Aztec Trustee WA: 0 properties found
+INFO:run_scrapers:Running scraper: Stox Posting
+INFO:scrapers.base:Starting scrape for Stox Posting
+INFO:scrapers.stoxposting:Navigating to https://www.stoxposting.com/
+INFO:scrapers.stoxposting:Stox Posting: found 0 rows
+INFO:scrapers.stoxposting:Stox Posting: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Stox Posting
+INFO:run_scrapers:Stox Posting: 0 properties found
+INFO:run_scrapers:Running scraper: ServiceLink ASAP
+INFO:scrapers.base:Starting scrape for ServiceLink ASAP
+INFO:scrapers.servicelinkasap:Navigating to https://www.servicelinkasap.com/quicksearch.aspx
+INFO:scrapers.servicelinkasap:Submitted ServiceLink search
+INFO:scrapers.servicelinkasap:ServiceLink: found 9 rows
+INFO:scrapers.servicelinkasap:ServiceLink ASAP: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from ServiceLink ASAP
+INFO:run_scrapers:ServiceLink ASAP: 0 properties found
+INFO:run_scrapers:Running scraper: InsourceLogic
+INFO:scrapers.base:Starting scrape for InsourceLogic
+WARNING:scrapers.insourcelogic:InsourceLogic credentials not configured — skipping
+INFO:scrapers.base:Successfully scraped 0 properties from InsourceLogic
+INFO:run_scrapers:InsourceLogic: 0 properties found
+INFO:deduplication:Dedup complete: {'inserted': 0, 'updated': 4, 'merged_sources': 0}
+INFO:zillow_enricher:Property image enrichment complete: 0 properties updated
+INFO:     127.0.0.1:50648 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50648 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51359 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51359 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51366 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51366 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51480 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51480 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52963 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52963 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52963 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52963 - "GET /api/properties?sort_by=auction_date HTTP/1.1" 200 OK

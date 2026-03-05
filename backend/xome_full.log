@@ -1,0 +1,28 @@
+INFO:scrapers.base:Starting scrape for Xome
+INFO:scrapers.xome:Navigating to https://www.xome.com/auctions/listing/WA/Spokane
+INFO:scrapers.xome:Page loaded. Waiting 8s for React to mount cards...
+INFO:scrapers.xome:Parsing Xome cards...
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+WARNING:scrapers.xome:Xome card extraction error: could not convert string to float: '.'
+INFO:scrapers.xome:Xome: scraped 14 properties
+INFO:scrapers.base:Successfully scraped 14 properties from Xome
+Initializing Xome Scraper...
+Scraper instance created.
+Running scrape (this will launch Playwright)...
+DEBUG: entering async_playwright context
+DEBUG: launching chromium with headless=True
+DEBUG: creating new page directly from browser
+DEBUG: executing _extract_data
+Scrape completed, returned <class 'list'> with length 14
+
+Scraped 14 properties from Xome.
+
+[1] 6203 N Wall St | Spokane | Starting Bid: 140000.0 | Date: Mar 07 - Mar 11
+[2] 2520 N Rebecca St | Spokane | Starting Bid: 135000.0 | Date: Mar 07 - Mar 11
+[3] 6907 N Stevens St | Spokane | Starting Bid: 165000.0 | Date: Mar 07 - Mar 11
+[4] 7612 N Standard St | Spokane | Starting Bid: 180000.0 | Date: Mar 07 - Mar 11
+[5] 915 E Broad Ave | Spokane | Starting Bid: 185000.0 | Date: Mar 07 - Mar 11

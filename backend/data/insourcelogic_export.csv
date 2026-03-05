@@ -1,0 +1,6 @@
+TS Number,APN,Property Address,City,State,Zip,Sale Date,Sale Time,Opening Bid,Sale Status,County
+ISL-001,111.222,789 Pine Ave,Spokane,WA,99208,05/10/2026,10:00 AM,185000.00,Active,Spokane
+ISL-002,333.444,101 Maple Ln,Spokane Valley,WA,99216,05/12/2026,09:00 AM,320500.50,Postponed,Spokane
+ISL-003,555.666,202 Birch Ct,Cheney,WA,99004,05/15/2026,10:00 AM,145000.00,Active,Spokane
+ISL-004,777.888,303 Cedar Rd,Deer Park,WA,99006,05/20/2026,11:00 AM,,Cancelled,Spokane
+ISL-005,999.000,404 Oak Dr,Spokane,WA,99201,05/25/2026,10:00 AM,0.00,Active,Spokane

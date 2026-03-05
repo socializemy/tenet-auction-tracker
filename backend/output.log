@@ -1,0 +1,12 @@
+Initializing Quality Loan Scraper...
+Running scrape...
+INFO:scrapers.base:Starting scrape for Quality Loan
+INFO:scrapers.quality_loan:Navigating to Quality Loan login page
+INFO:scrapers.quality_loan:Login successful (networkidle reached)
+INFO:scrapers.quality_loan:Navigating to File Search page explicitly
+INFO:scrapers.quality_loan:Bypassing JS Validation for broad search.
+INFO:scrapers.quality_loan:Parsing Quality Loan results page 1...
+WARNING:scrapers.quality_loan:No data rows found in Quality Loan results
+INFO:scrapers.quality_loan:Quality Loan: scraped 0 Spokane properties
+INFO:scrapers.base:Successfully scraped 0 properties from Quality Loan
+Scraped 0 properties.

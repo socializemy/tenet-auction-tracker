@@ -1,0 +1,17 @@
+[Unit]
+Description=Spokane Auction Tracker — Nightly Scrape Scheduler
+After=network.target spokane-auction-api.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=DEPLOY_PATH/backend
+EnvironmentFile=DEPLOY_PATH/backend/.env
+ExecStart=DEPLOY_PATH/backend/venv/bin/python scheduler.py
+Restart=always
+RestartSec=30
+StandardOutput=append:DEPLOY_PATH/backend/scrape.log
+StandardError=append:DEPLOY_PATH/backend/scrape.log
+
+[Install]
+WantedBy=multi-user.target

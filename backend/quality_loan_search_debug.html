@@ -1,0 +1,451 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head id="Head1"><meta http-equiv="X-UA-Compatible" content="IE=Edge">
+        <script language="JavaScript" src="../../Scripts/jquery-1.7.2.min.js" type="text/javascript"></script>
+        <script language="JavaScript" src="../../Scripts/jquery-ui-1.8.19.min.js" type="text/javascript"></script>
+        <script language="JavaScript" src="../../Scripts/jquery.maskedinput.min.js" type="text/javascript"></script>
+        <script language="JavaScript" src="../../Scripts/jquery.watermark.min.js" type="text/javascript"></script>
+        <script language="JavaScript" src="../../Scripts/jquery.multiselect.js" type="text/javascript"></script>
+        <script language="JavaScript" src="../../Scripts/activity-indicator.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            $(document).ready(function () {
+                //setup modal loading popup
+                $("#divModalLoadingIndicator").dialog({
+                    autoOpen: false
+                    , modal: true
+                    , minWidth: 100
+                    , width: 100
+                });
+                $("#divModalLoadingIndicator").parent().appendTo($("#MasterPageForm"));
+                $('#loadingSpinner').activity();
+            });
+
+            function pageLoad() {
+                if (!window.Sys.WebForms.PageRequestManager.getInstance().get_isInAsyncPostBack()) {
+                    window.Sys.WebForms.PageRequestManager.getInstance().add_endRequest(AjaxEnd);
+                    window.Sys.WebForms.PageRequestManager.getInstance().add_initializeRequest(AjaxBegin);
+                }
+            }
+            function AjaxEnd() {
+                $('#divModalLoadingIndicator').dialog('close');
+            }
+            function AjaxBegin() {
+                $('#divModalLoadingIndicator').dialog('open');
+            }
+        </script>
+        <link rel="shortcut icon" type="image/x-icon" href="../../media/icons/faviconQLS.ico"><meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+    <script src="../../Scripts/jquery.watermark.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $(".searchField").live("blur", function () {
+                $(".searchField").not(this).val('');
+                $("#lblNoFilesFound").hide();
+                UpdateValidationSummary();
+            });
+            $('.searchField').live('keydown', function (e) {
+                var keyCode = e.keyCode || e.which;
+
+                if (keyCode == 9) {
+                    e.preventDefault();
+                    // call custom function here
+                    $("#cmdSubmitFileSearch").focus();
+                }
+            });
+            //setup modal popup
+            jQuery("#divFileSearchModalPopupWrapper").dialog({
+                autoOpen: false
+                , modal: true
+                , minWidth: 400
+            });
+            $("#divFileSearchModalPopupWrapper").parent().appendTo($("#MasterPageForm"));
+            $("#btnAccept").live("click", function () {
+                btnAccept_Click();
+            });
+            $(function () {
+                var hiddenControlValue = $('input[id$=\'hiddenAccept\']').val();
+                if (hiddenControlValue == "true") {
+                    $('#divFileSearchModalPopupWrapper').dialog('close');
+                }
+                else {
+                    $('#divFileSearchModalPopupWrapper').dialog('open');
+                }
+            });
+            //$('#txtTSN').watermark('CA-00-00000-AA');
+
+        });
+
+
+        function UpdateValidationSummary() {
+
+            window.Page_ClientValidate();
+
+            var invalids = $.grep(window.Page_Validators, function (a) { return (a.isvalid != true); });
+
+            $("#vsSearchFields").children().remove();
+
+            $.each(invalids, function (key, value) {
+                var validator = document.getElementById(value.id);
+                $("#vsSearchFields").append("<li>" + validator.errormessage + "</li>");
+
+            });
+
+            if (invalids.length == 0) {
+                $("#vsSearchFields").children().remove();
+                $("#vsSearchFields").hide();
+            }
+            else {
+                $("#vsSearchFields").show();
+            }
+        }
+        function btnAccept_Click() {
+
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "FileSearch.aspx/btnAcceptClick",
+                success: function () {
+                    $('#divFileSearchModalPopupWrapper').dialog('close');
+                    $('input[id$=\'hiddenAccept\']').val('true');
+                }
+            });
+        }
+        function btnDecline_Click() {
+            window.__doPostBack('btnDecline', "OnClick");
+        }
+    </script>
+    <style type="text/css">
+        .AddlAddressCard {
+            padding-left:30px;
+            padding-bottom:20px;
+        }
+        .AddlAddressCard .Address {
+            font-weight:bold;
+        }
+        .AddlAddressCard span {
+            /*font-weight:bold;*/
+        }
+    </style>
+    <title>QLS - File Search</title>
+<link href="../../App_Themes/QLS-Main/jquery-ui-1.8.16.custom.css" type="text/css" rel="stylesheet"><link href="../../App_Themes/QLS-Main/QLS-Main.css" type="text/css" rel="stylesheet"><title>
+	FileSearch
+</title></head>
+    <body>
+    <form method="post" action="./FileSearch.aspx" onsubmit="javascript:return WebForm_OnSubmit();" id="MasterPageForm">
+<div class="aspNetHidden">
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="9SMOLcu1KIGJ1L6bqHx48fmhLA0zyjf+e9vKYzVNZ1RiE38f35pOHMKoeWdOZ9V0ux9dr3MuX0L6b0jnM6KhkasSJeuIWggpwxjqqlrQzsO0VGxDtLBW9N5Z4lRF3JZXdhpFzB21RtqVL92uXAdZGOX3FUt9PGtiFTkJJLeNAuhdc4Mpg4U9NoT0DlNBH07YNhyNzgJdzaS9NuavoX/4DM1WnSMTdjOoW2Hgyn1MbCfat9RVp5wxES6gaNKAq4VdBAzIZeFNcRD9MU7J+c9uQWuf97/TWSP30TQ1j/EnICktOJto60QnbvrYs+WptQ2/+axJiifgHIQ3odoAmpKwqENkxiyX+ojrnx8W0dbLm87SsLPcE12QROO/cj8cCrHIeIAnz8tw8YGsPBoKMJ/tlyLalsiRWCzEE0m6xA5hUJNIdGCpix2rRb4DYq39rJZhN9XJSgyErKDXEDSHr5QwjVUy+3smwztikfPNRZnToPZoCLsXnJZX/GmHqr4+zsgnRSI0OiFWEicrQNn5mK3XKDDUaz69LSt1QO+dj4yXtpJjqZDLwWg+bz/G3gLpKZgOehM2PS0CsChAMlGwqstRFFFF4/SypDSGkTrbPTqcr6y+7BlGhUR/BZpj9qYNWkpI9R67Sk0vVZN0M/+MLksLPDjdyDqxvxpQjWRuu2et1fAcSnHMDxFcAdgjRr8io7U7708NsFxvJd1wSIdZrMbJSMdES3GPiFk42TETkQ8MOrJYta3oyZKvfLqbu49G4T3IuaytBZjBr6Vc4V+xvgif/5rzyZUH0+erP2rhkhn32WNeOHtJWFwg0c/roGLsI8FWplOqLxTWxnI+Qwj1fQv9AOVHJJAJmPDL0ZIDQJD7isj8dgOEDdl7X3D+OkzTms5mw7qyA2zryiiMlMP+g+/bFnhNCV9u1+qssqYTascfSnrHNUgAzrfNZ3wv55A7DPHre1kOyAhaVFso5mAYZRzCCocLK8b7a0Si0BX82AaH7AV1ylpq1pG6ZwhxJSez/dSSV77X7zhLhewgbtyx79ToGEh6sqwZr5WSHfKsOxwz2NX2MeSxAXFXYjtFMBRySaXv4zawbNW2b3X+Hd28SEmwCgAO/HfOAcEBJU+KwIz+YEQwUl+OZgbbBIrrpedxSZmQisU1u8UNQo9lzGpzmzWNU3HltmD+1GiOqT1+0XNs5DpubxNExDYxczWp8lFJGfM3DGYGeg==">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['MasterPageForm'];
+if (!theForm) {
+    theForm = document.MasterPageForm;
+}
+function __doPostBack(eventTarget, eventArgument) {
+    if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+        theForm.__EVENTTARGET.value = eventTarget;
+        theForm.__EVENTARGUMENT.value = eventArgument;
+        theForm.submit();
+    }
+}
+//]]>
+</script>
+
+
+<script src="/WebResource.axd?d=HiHCIgEgB_QvtPnS6FLbci8RueKW5TbbT6H7nnQqXfNbTu5hcvwWkt5k78Wp9f0OnuaaggxWyDzP9N3z3NVUK7FOQls1&amp;t=638901284248157332" type="text/javascript"></script>
+
+
+<script src="/ScriptResource.axd?d=CrZ9pOszLnlB4je1csyC2cwQRlXG0Ku7xyTsg0othaomwlsLUIUstJadDr4-m-2I5pY7vRRQB3IsBmnYq8nR9bslyOWe1VbNKrBOw1LHoyIiF-Hm4-Qn2pczrJVKsRQkwqy1cAcnqAB234gQzOdotYsL6RA1&amp;t=ffffffff93d1c106" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=hdh7AcRXi3KcTbM2RVqB47u03JlxdbLTcAXYCzoG_BkDRgHAKZRbuqsF44bmKjBUJqQcEXrEJrTvCzQy5CvCBDqWbsXJiEmdkMsnL9c5_mk0LDP30l-_voysEl_0R9JXfNXJXleLdeD3g5gcxyZ4XWhOvqE1&amp;t=5c0e0825" type="text/javascript"></script>
+<script src="/ScriptResource.axd?d=lOVu_5n5mgk5kglu5fSlSk-slcuAfKczkBm3MTczK2d_ni6BCEOUTzZmmQibCi0gqHK5WdO19vjKhiXtZ2cXqv3SC0KzwqMGa2Z5ffzkA4zD6r9EWZS3sA_zZiNiuOEqVIfMi5pJ3Pjxau6EtfVBk-fmqPVsTZkvHsOZI3XpUatn8OYz0&amp;t=5c0e0825" type="text/javascript"></script>
+<script type="text/javascript">
+//<![CDATA[
+var PageMethods = function() {
+PageMethods.initializeBase(this);
+this._timeout = 0;
+this._userContext = null;
+this._succeeded = null;
+this._failed = null;
+}
+PageMethods.prototype = {
+_get_path:function() {
+ var p = this.get_path();
+ if (p) return p;
+ else return PageMethods._staticInstance.get_path();},
+BtnAcceptClick:function(succeededCallback, failedCallback, userContext) {
+return this._invoke(this._get_path(), 'BtnAcceptClick',false,{},succeededCallback,failedCallback,userContext); }}
+PageMethods.registerClass('PageMethods',Sys.Net.WebServiceProxy);
+PageMethods._staticInstance = new PageMethods();
+PageMethods.set_path = function(value) { PageMethods._staticInstance.set_path(value); }
+PageMethods.get_path = function() { return PageMethods._staticInstance.get_path(); }
+PageMethods.set_timeout = function(value) { PageMethods._staticInstance.set_timeout(value); }
+PageMethods.get_timeout = function() { return PageMethods._staticInstance.get_timeout(); }
+PageMethods.set_defaultUserContext = function(value) { PageMethods._staticInstance.set_defaultUserContext(value); }
+PageMethods.get_defaultUserContext = function() { return PageMethods._staticInstance.get_defaultUserContext(); }
+PageMethods.set_defaultSucceededCallback = function(value) { PageMethods._staticInstance.set_defaultSucceededCallback(value); }
+PageMethods.get_defaultSucceededCallback = function() { return PageMethods._staticInstance.get_defaultSucceededCallback(); }
+PageMethods.set_defaultFailedCallback = function(value) { PageMethods._staticInstance.set_defaultFailedCallback(value); }
+PageMethods.get_defaultFailedCallback = function() { return PageMethods._staticInstance.get_defaultFailedCallback(); }
+PageMethods.set_enableJsonp = function(value) { PageMethods._staticInstance.set_enableJsonp(value); }
+PageMethods.get_enableJsonp = function() { return PageMethods._staticInstance.get_enableJsonp(); }
+PageMethods.set_jsonpCallbackParameter = function(value) { PageMethods._staticInstance.set_jsonpCallbackParameter(value); }
+PageMethods.get_jsonpCallbackParameter = function() { return PageMethods._staticInstance.get_jsonpCallbackParameter(); }
+PageMethods.set_path("FileSearch.aspx");
+PageMethods.BtnAcceptClick= function(onSuccess,onFailed,userContext) {PageMethods._staticInstance.BtnAcceptClick(onSuccess,onFailed,userContext); }
+function WebForm_OnSubmit() {
+if (typeof(ValidatorOnSubmit) == "function" && ValidatorOnSubmit() == false) return false;
+return true;
+}
+//]]>
+</script>
+
+<div class="aspNetHidden">
+
+	<input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="DD1CBB54">
+	<input type="hidden" name="__VIEWSTATEENCRYPTED" id="__VIEWSTATEENCRYPTED" value="">
+	<input type="hidden" name="__PREVIOUSPAGE" id="__PREVIOUSPAGE" value="88kqXX-_YgTgmOf68vxSlCJHw_CJiulWN57DcUIQKqdG9ZoCUyzIP9ZamrZGrc_0KI7ByNS-3bELbk8AtQe_DYOAqaiQpKDD4HjHRQkbIYNsATmmjffSFhR7wat70fB3oTUYPA2">
+	<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="0OK3H1Wx3bf6CMk25EoIudGEjBGkmSQgZV0pc8l3plA51NXlB5L7rkXVwpvrsi7k4qdvotCqIf7L64yDjMlBRN2+cPL82VMP58RO42h71dFi2rM7Zr63eJd3AucVa/0WQXkxuuMya+uyY8/0NNDFMvnSntAMOsbtp53pZ6xwL6q5fFihzF/l/ozhh41iLb95IQ8ZVgu30c69PL8wo4zBJTc9yILukQaidiQmFcaAzGYeLu3TwB10i1qXkGtArKiCDmIhN/6pcRbeXGuCMfx/KjDPAU8=">
+</div>
+    <div id="header">
+        <div class="wrapper">
+            <h1>
+                <a href="../../QLShome.aspx" title="Home Page Image Link">Quality Loan Service
+                    Corp</a></h1>
+            
+                    <div class="rightNoWidth">
+                        Welcome back
+                        <span id="masterLoginName">CoJames1</span>
+                        <br>
+                        <div class="loginDiv">
+                            <a id="masterMyQLS" class="masterSmallButton" href="javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;ctl00$masterLoginTemplate$masterMyQLS&quot;, &quot;&quot;, false, &quot;&quot;, &quot;myQLS.aspx&quot;, false, true))">My QLS</a>
+                        </div>
+                        <div class="loginDiv">
+                            <div class="loginDiv">
+                                <a id="masterLoginStatus" class="masterSmallButton" href="javascript:__doPostBack('ctl00$masterLoginTemplate$masterLoginStatus$ctl00','')">Logout</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!--end rightNoWidth div-->
+                
+            <div id="navDiv">
+                <ul id="nav" class="nav4items">
+                    <li>
+                        <a id="navMenuHome" href="../../QLShome.aspx">Home</a></li>
+                    <li>
+                        <a id="navMenuAbout" href="FileSearch.aspx">Sales Information</a></li>
+                    <li>
+                        <a id="navMenuResources" href="../PagesPublic/Resources.aspx">Resources</a></li>
+                    <li class="lastChild">
+                        <a id="navMenuContactUs" href="../PagesPublic/contact.aspx">Contact Us</a></li>
+                </ul>
+            </div>
+            <!--end navDiv-->
+            
+            
+        </div>
+        <!--end wrapper div-->
+    </div>
+    <!--end header div-->
+    <div id="bodyContent" class="white">
+        <div class="wrapper">
+            
+    <script type="text/javascript">
+//<![CDATA[
+Sys.WebForms.PageRequestManager._initialize('ctl00$MainContent$smFileSearch', 'MasterPageForm', ['tctl00$MainContent$uppnlFileSearch','uppnlFileSearch'], [], [], 90, 'ctl00');
+//]]>
+</script>
+
+    <input type="hidden" name="ctl00$MainContent$hiddenAccept" id="hiddenAccept" value="monkey">
+    
+    
+    <div id="fullBlueBox">
+        <div id="uppnlFileSearch">
+	
+                <div class="primary whiteBox">
+                    <div class="title">
+                        <h1 id="lblFileSearchHeader">QLS File Search</h1>
+                        <h2 id="lblFileSearchIntro">The QLS file search will allow you access to upcoming sales information 24/7!</h2>
+                    </div>
+                    <div class="content">
+                        <img src="../../media/icons/Search32.png" alt="magnifying glass icon" class="floatLeft headerIcon">
+                        <h4 id="lblFileSearchWelcome">Welcome to the Quality Loan Service Corp. FileSearch</h4>
+                        <p>
+                            Please enter either the trustee sale number <em>OR</em> the property street address
+                            <em>OR</em> the loan number in the text boxes below and we will retrieve the sales
+                            information for that individual file.</p>
+                        <br>
+                        <div id="divTsNumOrAddress">
+                            <span id="lblTSN" class="leftColLabel">Trustee Sale Number</span>
+                            
+                            <input name="ctl00$MainContent$txtTSN" type="text" id="txtTSN" class="leftColInput searchField">
+                            <span id="valTSN" class="validation-error" style="display:none;"></span>
+                            <br>
+                            <span id="lblStreetAddress" class="leftColLabel">Street Address</span>
+                            <input name="ctl00$MainContent$txtStreetAddress" type="text" id="txtStreetAddress" title="Address should be in the format: 1234 Any St  (No Special characters: @.#-)" class="leftColInput searchField">
+                            <span id="valAddress" class="validation-error" style="display:none;"></span>
+                            <br>
+                            <span id="lblLoanNumber" class="leftColLabel">Loan Number</span>
+                            <input name="ctl00$MainContent$txtLoanNumber" type="text" id="txtLoanNumber" class="leftColInput searchField">
+                            <span id="valLoanNumber" class="validation-error" style="display:none;"></span>
+                            <br>
+                            <br>
+                            <div id="vsSearchFields" class="StandardValidationSummary " style="display:none;">
+
+	</div>
+                        </div>
+                        <br>
+                        
+                        <br>
+                        <div id="divSubmitFileSearch">
+                            <input type="submit" name="ctl00$MainContent$cmdSubmitFileSearch" value="Submit" id="cmdSubmitFileSearch" tabindex="1" class="StandardButton">
+                        </div>
+                    </div>
+                    <br>
+                    
+                    <!-- End divResults -->
+                </div>
+            
+</div>
+    </div>
+    <!-- End FullBlueBox -->
+
+        </div>
+        <!--wrapper-->
+    </div>
+    <!--bodyContent-->
+    <div id="footer">
+        <div class="wrapper">
+            <h1>
+                <a id="lnkQLSHomepage" href="../../QLShome.aspx">Quality Loan Service Corp</a></h1>
+            <div class="message">
+                <p>
+                     Attention: <span id="lblCompanyNameMaster1">Quality Loan Service Corp.</span> 
+                    is NOT a lending institution. It has come
+                    to our attention that non-associated entities have been using the names and websites
+                    of our existing companies. <span id="lblCompanyName">Quality Loan Service</span> 
+                    does NOT provide loans or loan protection
+                    insurance. Please help us stop these type of scams by reporting them to the FBI
+                    through their website <a href="https://www.fbi.gov/contact-us/field-offices" target="_blank">Click Here For More Info</a>
+                </p>
+            </div>
+            <div class="bbb">
+                <a title="Quality Loan Service Corporation BBB Business Review" href="http://www.bbb.org/san-diego/business-reviews/real-estate/quality-loan-service-corporation-in-san-diego-ca-26005553/#bbbonlineclick">
+                    <img alt="Quality Loan Service Corporation BBB Business Review" style="border: 0;" src="/media/logos/black-seal-120-61-quality-loan-service-corporation-26005553.png">
+                </a>
+                
+            </div>
+            <div class="bottom">
+                <p> <br><br>
+                    <a id="footerNavHome" href="../../QLShome.aspx">Home</a>
+                    |
+                    <a id="footerNavPrivacyPolicy" href="../PagesPublic/PrivacyPolicy.aspx">Privacy, Security &amp; Legal</a>
+                    <br>
+                    <span id="lblCompanyNameMaster2">Quality Loan Service Corp.</span> © 2024</p>
+            </div>
+        </div>
+    </div>
+    
+    
+<script type="text/javascript">
+//<![CDATA[
+var Page_ValidationSummaries =  new Array(document.getElementById("vsSearchFields"));
+var Page_Validators =  new Array(document.getElementById("valTSN"), document.getElementById("valAddress"), document.getElementById("valLoanNumber"));
+//]]>
+</script>
+
+<script type="text/javascript">
+//<![CDATA[
+var valTSN = document.all ? document.all["valTSN"] : document.getElementById("valTSN");
+valTSN.controltovalidate = "txtTSN";
+valTSN.errormessage = "Invalid TSN Format";
+valTSN.display = "None";
+valTSN.enabled = "False";
+valTSN.validationGroup = "searchFields";
+valTSN.evaluationfunction = "RegularExpressionValidatorEvaluateIsValid";
+valTSN.validationexpression = "[a-z|A-Z]{2}[-]?[0-9]{2}[-]?[0-9]{4,8}[-]?[a-z|A-Z]{2}";
+var valAddress = document.all ? document.all["valAddress"] : document.getElementById("valAddress");
+valAddress.controltovalidate = "txtStreetAddress";
+valAddress.errormessage = "Invalid Address Format";
+valAddress.display = "None";
+valAddress.validationGroup = "searchFields";
+valAddress.evaluationfunction = "RegularExpressionValidatorEvaluateIsValid";
+valAddress.validationexpression = "^[0-9]{1,6}\\s+\\w*.*";
+var valLoanNumber = document.all ? document.all["valLoanNumber"] : document.getElementById("valLoanNumber");
+valLoanNumber.controltovalidate = "txtLoanNumber";
+valLoanNumber.errormessage = "Loan Number Must Be Numeric";
+valLoanNumber.display = "None";
+valLoanNumber.validationGroup = "searchFields";
+valLoanNumber.evaluationfunction = "RegularExpressionValidatorEvaluateIsValid";
+valLoanNumber.validationexpression = "[0-9]+";
+var vsSearchFields = document.all ? document.all["vsSearchFields"] : document.getElementById("vsSearchFields");
+vsSearchFields.validationGroup = "searchFields";
+//]]>
+</script>
+
+
+<script type="text/javascript">
+//<![CDATA[
+
+var Page_ValidationActive = false;
+if (typeof(ValidatorOnLoad) == "function") {
+    ValidatorOnLoad();
+}
+
+function ValidatorOnSubmit() {
+    if (Page_ValidationActive) {
+        return ValidatorCommonOnSubmit();
+    }
+    else {
+        return true;
+    }
+}
+        
+(function(id) {
+    var e = document.getElementById(id);
+    if (e) {
+        e.dispose = function() {
+            Array.remove(Page_ValidationSummaries, document.getElementById(id));
+        }
+        e = null;
+    }
+})('vsSearchFields');
+
+document.getElementById('valTSN').dispose = function() {
+    Array.remove(Page_Validators, document.getElementById('valTSN'));
+}
+
+document.getElementById('valAddress').dispose = function() {
+    Array.remove(Page_Validators, document.getElementById('valAddress'));
+}
+
+document.getElementById('valLoanNumber').dispose = function() {
+    Array.remove(Page_Validators, document.getElementById('valLoanNumber'));
+}
+//]]>
+</script>
+<div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-labelledby="ui-dialog-title-divModalLoadingIndicator" style="display: none; z-index: 1000; outline: 0px; position: absolute;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix"><span class="ui-dialog-title" id="ui-dialog-title-divModalLoadingIndicator">Loading</span><a href="#" class="ui-dialog-titlebar-close ui-corner-all" role="button"><span class="ui-icon ui-icon-closethick">close</span></a></div><div id="divModalLoadingIndicator" class="spinnerDiv ui-dialog-content ui-widget-content">
+        <div id="loadingSpinner" class="square" style=""><div style="width: 42px; height: 42px; position: absolute; margin-top: 4px; margin-left: 4px; animation: 0.8s linear 0s infinite normal none running spin12;"><svg style="width: 42px; height: 42px;"><g transform="translate(21,21)"><g stroke-width="4" stroke-linecap="round" stroke="rgb(51, 102, 153)"><line x1="0" y1="11" x2="0" y2="18" transform="rotate(0, 0, 0)" opacity="1"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(30, 0, 0)" opacity="0.9173553719008265"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(60, 0, 0)" opacity="0.8347107438016529"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(90, 0, 0)" opacity="0.7520661157024794"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(120, 0, 0)" opacity="0.6694214876033058"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(150, 0, 0)" opacity="0.5867768595041323"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(180, 0, 0)" opacity="0.5041322314049588"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(210, 0, 0)" opacity="0.42148760330578516"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(240, 0, 0)" opacity="0.33884297520661155"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(270, 0, 0)" opacity="0.25619834710743805"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(300, 0, 0)" opacity="0.17355371900826455"></line><line x1="0" y1="11" x2="0" y2="18" transform="rotate(330, 0, 0)" opacity="0.09090909090909094"></line></g></g></svg></div>
+        </div>
+    </div><div class="ui-resizable-handle ui-resizable-n"></div><div class="ui-resizable-handle ui-resizable-e"></div><div class="ui-resizable-handle ui-resizable-s"></div><div class="ui-resizable-handle ui-resizable-w"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se ui-icon-grip-diagonal-se" style="z-index: 1001;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 1002;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 1003;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 1004;"></div></div><div class="ui-dialog ui-widget ui-widget-content ui-corner-all ui-draggable ui-resizable" tabindex="-1" role="dialog" aria-labelledby="ui-dialog-title-divFileSearchModalPopupWrapper" style="display: block; z-index: 1002; outline: 0px; position: absolute; height: auto; width: 400px; top: 94px; left: 436.5px;"><div class="ui-dialog-titlebar ui-widget-header ui-corner-all ui-helper-clearfix"><span class="ui-dialog-title" id="ui-dialog-title-divFileSearchModalPopupWrapper">Terms Of Use</span><a href="#" class="ui-dialog-titlebar-close ui-corner-all" role="button"><span class="ui-icon ui-icon-closethick">close</span></a></div><div id="divFileSearchModalPopupWrapper" class="legalDisclaimerPopup ui-dialog-content ui-widget-content" scrolltop="0" scrollleft="0" style="width: auto; min-height: 100.333px; height: auto;">
+        
+        <p style="text-align: justify">
+            No warranties or guarantees are given to information completeness or correctness as this information is
+            subject to change at any time. It will be necessary for you to attend all sales in order to obtain the most
+            current information. The trustee or its agent will not be liable for any loss you may sustain in receiving this
+            information through the website. Direction given by your mortgage company to Quality Loan Service to
+            postpone your sale date or place your foreclosure on hold may take 24 hours to update on the Quality Loan
+            Service website. Information about postponements that are very short in duration or that occur close in time
+            to the scheduled sale may not immediately be reflected in the telephone information or on the website.
+            Again, the best way to verify postponement information is to attend the scheduled sale. If you are unable
+            to confirm an expected change in status, please contact our office at (866) 645-7711 for further assistance.
+        </p>
+        <p style="text-align: justify">
+            <strong>To continue you are required to accept the terms.</strong></p>
+        <div class="modalPopupControls">
+            <input id="btnAccept" value="Accept" type="button" class="modalButton">
+            <input type="submit" name="ctl00$MainContent$btnDecline" value="Decline" onclick="btnDecline_Click();" id="btnDecline" class="modalButton">
+        </div>
+    </div><div class="ui-resizable-handle ui-resizable-n"></div><div class="ui-resizable-handle ui-resizable-e"></div><div class="ui-resizable-handle ui-resizable-s"></div><div class="ui-resizable-handle ui-resizable-w"></div><div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se ui-icon-grip-diagonal-se" style="z-index: 1001;"></div><div class="ui-resizable-handle ui-resizable-sw" style="z-index: 1002;"></div><div class="ui-resizable-handle ui-resizable-ne" style="z-index: 1003;"></div><div class="ui-resizable-handle ui-resizable-nw" style="z-index: 1004;"></div></div></form>
+
+
+<div class="ui-widget-overlay" style="width: 1280px; height: 947px; z-index: 1001;"></div></body></html>
