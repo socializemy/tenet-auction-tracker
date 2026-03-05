@@ -29,12 +29,15 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
     if fetch_estimate:
         ddg_query = f"{address} {city} {state} zillow".replace(" ", "+")
         ddg_url = f"https://html.duckduckgo.com/html/?q={ddg_query}"
-    try:
-        req = requests.get(ddg_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}, timeout=10)
-        soup = BeautifulSoup(req.text, 'html.parser')
-        
-        for res in soup.find_all('div', class_='result'):
-            title_elem = res.find('h2', class_='result__title')
+        try:
+            # Run blocking requests.get in a separate thread so Uvicorn can still answer API polls
+            req = await asyncio.to_thread(
+                requests.get, ddg_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}, timeout=10
+            )
+            soup = BeautifulSoup(req.text, 'html.parser')
+            
+            for res in soup.find_all('div', class_='result'):
+                title_elem = res.find('h2', class_='result__title')
             desc_elem = res.find('a', class_='result__snippet')
             
             title = title_elem.text.strip() if title_elem else ""
@@ -93,15 +96,17 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
             # Check if primary values are found to break early
             if result.get("estimated_value") and result.get("bedrooms") and result.get("bathrooms") and result.get("square_feet") and result.get("year_built"):
                 break
-    except Exception as e:
-        logger.warning(f"DDG estimate extraction error for '{address}': {e}")
+        except Exception as e:
+            logger.warning(f"DDG estimate extraction error for '{address}': {e}")
 
     # 1.5 Fetch APN using specialized DDG query
     if fetch_apn:
         ddg_apn_query = f"{address} {city} {state} parcel number".replace(" ", "+")
         ddg_apn_url = f"https://html.duckduckgo.com/html/?q={ddg_apn_query}"
         try:
-            req = requests.get(ddg_apn_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}, timeout=10)
+            req = await asyncio.to_thread(
+                requests.get, ddg_apn_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)'}, timeout=10
+            )
             soup = BeautifulSoup(req.text, 'html.parser')
             
             for res in soup.find_all('div', class_='result'):
