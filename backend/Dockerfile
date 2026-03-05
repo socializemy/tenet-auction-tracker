@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
     xvfb \
+    xauth \
     libnss3 \
     libxss1 \
     libasound2 \
