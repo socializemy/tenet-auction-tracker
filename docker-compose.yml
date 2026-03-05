@@ -8,9 +8,8 @@ services:
     container_name: auction_backend
     environment:
       - CHROME_BIN_PATH=/usr/bin/google-chrome
-      - DISPLAY=:99
       - DATABASE_URL=sqlite:////app/data/auction_data.db
-      # Add environment variables here if needed (e.g., ZILLOW_API_KEY)
+      # Add environment variables here if needed (e.g., QUALITY_LOAN_USER)
     ports:
       - "8000:8000"
     volumes:
