@@ -16,8 +16,10 @@ RUN apt-get update && apt-get install -y \
 
 # Download and install Google Chrome Stable via official .deb package (bypasses deprecated apt-key)
 RUN wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get update \
     && apt-get install -y ./google-chrome-stable_current_amd64.deb \
-    && rm google-chrome-stable_current_amd64.deb
+    && rm google-chrome-stable_current_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
