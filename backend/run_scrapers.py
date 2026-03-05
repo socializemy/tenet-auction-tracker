@@ -94,11 +94,18 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
         if enrich_zillow:
             _last_scrape_status["status_text"] = "Enriching properties with Zillow/DuckDuckGo cache..."
             _last_scrape_status["progress_percent"] = 85
-            from sqlalchemy import or_
-            unenriched = db.query(Property).filter(
-                Property.zillow_url.is_(None)
-            ).limit(200).all()  # Increased limit so newly scraped pipelines get fully parsed
-            zillow_count = await enrich_properties_zillow(db, unenriched)
+            try:
+                from sqlalchemy import or_
+                unenriched = db.query(Property).filter(
+                    Property.zillow_url.is_(None)
+                ).limit(200).all()  # Increased limit so newly scraped pipelines get fully parsed
+                zillow_count = await enrich_properties_zillow(db, unenriched, status_dict=_last_scrape_status)
+            except Exception as e:
+                import traceback
+                error_msg = traceback.format_exc()
+                logger.error(f"Zillow Enrichment Crash: {error_msg}")
+                _last_scrape_status["status_text"] = f"CRASH: {str(e)} | Details in Docker logs"
+                zillow_count = 0
         else:
             zillow_count = 0
 
