@@ -1,0 +1,41 @@
+# ServiceLink Scraping Plan
+
+- [x] Navigate to https://www.servicelinkasap.com/quicksearch.aspx
+- [x] Login via Okta
+    - [x] Enter username: cory@socializemy.com
+    - [x] Click Next
+    - [x] Enter password: HJK4*#&90n
+    - [x] Click Verify
+- [x] Handle Terms of Service
+- [x] Fill search form
+    - [x] State: WA
+    - [x] County: Spokane
+    - [x] Check "Summary View"
+    - [x] Click Submit
+- [x] Extract Results Table HTML
+- [x] Save HTML to `servicelink_raw_table.html` (Saved to scratchpad below due to tool limitations)
+
+## Scraped Table HTML
+```html
+<table class="GridSum" cellspacing="0" rules="all" border="1" id="ctl00_ContentPlaceHolder1_gridTS" style="width:100%;border-collapse:collapse;">
+	<tbody><tr class="GridHeaderL" style="white-space:nowrap;">
+		<td>Sale Date</td><td>ASAPID</td><td>TS Number</td><td>Address</td><td>City</td><td>State</td><td>Zip</td><td>County</td><td>APN</td><td>Status</td><td>NOS Amt</td><td>Open Bid Amt</td><td>Sold Amt</td><td>Sale Location</td><td>Trustee</td><td>Trustee Phone</td>
+	</tr><tr class="GridItem">
+		<td>02/27/2026 10:00 AM</td><td>4862304</td><td>182169</td><td>910 N. Herald Rd. </td><td>SPOKANE VALLEY</td><td>WA</td><td>99206</td><td>Spokane</td><td>45171.1206</td><td>Back to Bene 02/27/2026 10:06 AM</td><td>$284,528.39</td><td>$277,365.00</td><td>$277,365.00</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>The Mortgage Law Firm, PLC</td><td>(877) 914-3498</td>
+	</tr><tr class="GridAltItem">
+		<td>03/20/2026 10:00 AM</td><td>4858888</td><td>28E71C1B8FF4</td><td>4219 E Carlisle Ave</td><td>SPOKANE</td><td>WA</td><td>99217</td><td>Spokane</td><td>35101.5813</td><td>Postponed to 03/20/2026</td><td>$279,706.58</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>ServiceLink Auction</td><td>(866)539-4173</td>
+	</tr><tr class="GridItem">
+		<td>03/20/2026 10:00 AM</td><td>4852363</td><td>F5C0B4FE70B1</td><td>18410 E Mission Ave</td><td>SPOKANE VALLEY</td><td>WA</td><td>99016</td><td>Spokane</td><td>55181.1936</td><td>Postponed to 03/20/2026</td><td>$125,707.23</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>ServiceLink Auction</td><td>(866)539-4173</td>
+	</tr><tr class="GridAltItem">
+		<td>04/03/2026 10:00 AM</td><td>4848994</td><td>183592</td><td>13915 E 9TH CT</td><td>SPOKANE VALLEY</td><td>WA</td><td>99037</td><td>Spokane</td><td>45233.3503</td><td>Postponed to 04/03/2026</td><td>$220,264.16</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>The Mortgage Law Firm, PLC</td><td>(877) 914-3498</td>
+	</tr><tr class="GridItem">
+		<td>04/10/2026 09:00 AM</td><td>4850100</td><td>CEDECCF2C298</td><td>3660 W Rosamond Ave.</td><td>SPOKANE</td><td>WA</td><td>99224</td><td>Spokane</td><td>25233.0506</td><td>Postponed to 04/10/2026 (No Reason)</td><td>$623,819.67</td><td>0</td><td>0</td><td>At the East entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>ServiceLink Auction</td><td>(866)539-4173</td>
+	</tr><tr class="GridAltItem">
+		<td>03/06/2026 10:00 AM</td><td>4849009</td><td>0C9619EA0694</td><td>6816 N Monroe St</td><td>SPOKANE</td><td>WA</td><td>99208</td><td>Spokane</td><td>36303.0528</td><td>Postponed to 03/06/2026 (NR)</td><td>$219,043.33</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>ServiceLink Auction</td><td>(866)539-4173</td>
+	</tr><tr class="GridItem">
+		<td>03/06/2026 09:00 AM</td><td>4853187</td><td>180679</td><td>6419 N Lynwood St </td><td>SPOKANE</td><td>WA</td><td>99208</td><td>Spokane</td><td>36303.1514</td><td>Postponed to 03/06/2026 (BK)</td><td>$180,739.34</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>The Mortgage Law Firm, PLC</td><td>(877) 914-3498</td>
+	</tr><tr class="GridAltItem">
+		<td>05/22/2026 10:00 AM</td><td>4855684</td><td>CC5EC0CA1D32</td><td>712 E Bonnie Lynn Ln</td><td>COLBERT</td><td>WA</td><td>99005</td><td>Spokane</td><td>37291.1504</td><td>Postponed to 05/22/2026</td><td>$370,136.49</td><td>0</td><td>0</td><td>At the South entrance of the Spokane County Courthouse, 1116 W. Broadway Ave., Spokane, WA 99201</td><td>ServiceLink Auction</td><td>(866)539-4173</td>
+	</tr>
+</tbody></table>
+```

@@ -20,7 +20,8 @@ class ServiceLinkScraper(BaseScraper):
         """
         logger.info(f"Starting offline scrape mapping for {self.source_name}")
         properties = []
-        html_path = "/Users/coryjames/.gemini/antigravity/brain/38a5b0ef-e58f-4b33-998e-465a9ed100e1/browser/scratchpad_fv7i1olc.md"
+        import os
+        html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "servicelinkasap_export.html")
         
         try:
             with open(html_path, 'r', encoding='utf-8') as f:
