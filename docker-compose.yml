@@ -9,13 +9,12 @@ services:
     environment:
       - CHROME_BIN_PATH=/usr/bin/google-chrome
       - DISPLAY=:99
+      - DATABASE_URL=sqlite:////app/data/auction_data.db
       # Add environment variables here if needed (e.g., ZILLOW_API_KEY)
     ports:
       - "8000:8000"
     volumes:
-      # Mount the database to persist data across container restarts
-      - ./backend/auction_data.db:/app/auction_data.db
-      # Mount the manual data ingest folder for offline parsing
+      # Mount the manual data ingest & database folder for offline parsing / safe sqlite states
       - ./backend/data:/app/data
     restart: unless-stopped
 
