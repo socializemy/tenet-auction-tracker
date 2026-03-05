@@ -44,5 +44,5 @@ ENV DISPLAY=:99
 
 EXPOSE 8000
 
-# Start Xvfb in the background explicitly, bypassing the broken xvfb-run wrapper, then start Uvicorn
-CMD Xvfb :99 -screen 0 1024x768x24 & python migrate_db.py && uvicorn main:app --host 0.0.0.0 --port 8000
+# Start Xvfb in the background explicitly, wait 1 second for it to initialize, migrate DB, then start Uvicorn
+CMD ["sh", "-c", "Xvfb :99 -screen 0 1024x768x24 & sleep 1 && python migrate_db.py && uvicorn main:app --host 0.0.0.0 --port 8000"]
