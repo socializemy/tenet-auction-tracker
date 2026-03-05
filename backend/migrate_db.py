@@ -17,6 +17,12 @@ def migrate():
     c.execute("PRAGMA table_info(properties)")
     columns = [row[1] for row in c.fetchall()]
     
+    # If the table doesn't even exist yet (fresh deploy), skip migration and let Uvicorn/SQLAlchemy initialize it natively
+    if not columns:
+        print("Database is empty or uninitialized. Skipping schema migration, deferring to SQLAlchemy boot...")
+        conn.close()
+        return
+    
     new_cols = []
     if "lot_size" not in columns:
         c.execute("ALTER TABLE properties ADD COLUMN lot_size VARCHAR")
