@@ -2,7 +2,12 @@ import sqlite3
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "auction_data.db")
+# Get db path from DATABASE_URL env var if available (Docker), otherwise fallback to local
+env_url = os.environ.get("DATABASE_URL", "")
+if env_url.startswith("sqlite:///"):
+    db_path = env_url.replace("sqlite:///", "")
+else:
+    db_path = os.path.join(BASE_DIR, "auction_data.db")
 
 def migrate():
     conn = sqlite3.connect(db_path)
