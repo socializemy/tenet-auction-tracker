@@ -42,6 +42,8 @@ SCRAPERS = [
 _last_scrape_status: Dict = {
     "last_run": None,
     "running": False,
+    "progress_percent": 0,
+    "status_text": "Ready",
     "results": {},
     "error": None,
 }
@@ -58,14 +60,19 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
         return {"error": "Scrape already in progress"}
 
     _last_scrape_status["running"] = True
+    _last_scrape_status["progress_percent"] = 0
+    _last_scrape_status["status_text"] = "Initializing scrapers..."
     _last_scrape_status["error"] = None
     init_db()
 
     all_properties = []
     per_source_counts = {}
 
-    for ScraperClass in SCRAPERS:
+    total_scrapers = len(SCRAPERS)
+    for idx, ScraperClass in enumerate(SCRAPERS):
         scraper = ScraperClass()
+        _last_scrape_status["status_text"] = f"Scraping {idx + 1}/{total_scrapers}: {scraper.source_name}"
+        _last_scrape_status["progress_percent"] = int((idx / total_scrapers) * 70)  # Reserve 30% for DB & Enrichment
         try:
             logger.info(f"Running scraper: {scraper.source_name}")
             results = await scraper.scrape()
@@ -77,12 +84,16 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
             per_source_counts[scraper.source_name] = 0
 
     # Deduplicate and upsert into DB
+    _last_scrape_status["status_text"] = "Deduplicating and merging records..."
+    _last_scrape_status["progress_percent"] = 75
     db = SessionLocal()
     try:
         dedup_stats = upsert_properties(db, all_properties)
 
         # Zillow enrichment for unenriched properties
         if enrich_zillow:
+            _last_scrape_status["status_text"] = "Enriching properties with Zillow/DuckDuckGo cache..."
+            _last_scrape_status["progress_percent"] = 85
             from sqlalchemy import or_
             unenriched = db.query(Property).filter(
                 Property.zillow_url.is_(None)
@@ -97,6 +108,8 @@ async def run_all_scrapers(enrich_zillow: bool = True) -> Dict:
     result = {
         "last_run": datetime.utcnow().isoformat() + "Z",
         "running": False,
+        "progress_percent": 100,
+        "status_text": "Finished",
         "total_scraped": len(all_properties),
         "dedup_stats": dedup_stats,
         "zillow_enriched": zillow_count,

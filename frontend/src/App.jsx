@@ -11,6 +11,7 @@ function App() {
   const [scraping, setScraping] = useState(false);
   const [selectedProp, setSelectedProp] = useState(null);
   const [scrapeMsg, setScrapeMsg] = useState('');
+  const [progressPercent, setProgressPercent] = useState(0);
 
   const [filters, setFilters] = useState({
     county: '',
@@ -38,7 +39,8 @@ function App() {
     fetchScrapeStatus().then(status => {
       if (status && status.running) {
         setScraping(true);
-        setScrapeMsg('Scraping in progress (loading live data)...');
+        setScrapeMsg(status.status_text || 'Scraping in progress (loading live data)...');
+        setProgressPercent(status.progress_percent || 0);
       }
     }).catch(e => console.error(e));
   }, []);
@@ -52,16 +54,21 @@ function App() {
         // If it's running, dynamically pull new properties so the user sees real-time Zillow images loading
         if (status.running) {
           loadProperties(true);
+          setProgressPercent(status.progress_percent || 0);
+          setScrapeMsg(status.status_text || 'Scraping in progress...');
         }
 
         if (status.running && !scraping) {
           setScraping(true);
-          setScrapeMsg('Scraping in progress (loading live data)...');
         } else if (!status.running && scraping) {
           setScraping(false);
-          setScrapeMsg(`Done! ${status.total_scraped ?? 0} scraped`);
+          setProgressPercent(100);
+          setScrapeMsg(`Done! ${status.total_scraped ?? 0} properties loaded.`);
           loadProperties(true);
-          setTimeout(() => setScrapeMsg(''), 6000);
+          setTimeout(() => {
+            setScrapeMsg('');
+            setProgressPercent(0);
+          }, 6000);
         }
       } catch (e) { /* ignore */ }
     }, 4000);
@@ -70,11 +77,13 @@ function App() {
 
   const handleRefresh = async () => {
     setScraping(true);
-    setScrapeMsg('Scraping all sources — this takes 2–5 minutes...');
+    setProgressPercent(0);
+    setScrapeMsg('Initializing connection to backend...');
     try {
       await triggerScrape();
     } catch (e) {
       setScraping(false);
+      setProgressPercent(0);
       setScrapeMsg('Scrape trigger failed. Is the backend running?');
       setTimeout(() => setScrapeMsg(''), 5000);
     }
@@ -178,9 +187,17 @@ function App() {
               borderBottom: '1px solid var(--border-color)',
               fontSize: '0.8rem',
               color: scraping ? '#2563EB' : '#059669',
-              fontWeight: 500
+              fontWeight: 500,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem'
             }}>
-              {scrapeMsg}
+              <div>{scrapeMsg}</div>
+              {scraping && (
+                <div style={{ width: '100%', height: '4px', background: 'rgba(37, 99, 235, 0.2)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ width: `${progressPercent}%`, height: '100%', background: '#2563EB', transition: 'width 0.5s ease-in-out' }} />
+                </div>
+              )}
             </div>
           )}
 
