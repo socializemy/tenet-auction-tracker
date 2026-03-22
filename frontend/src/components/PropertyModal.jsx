@@ -327,44 +327,6 @@ const PropertyModal = ({ property: prop, onClose }) => {
                             {prop.zillow_url && (
                                 <LinkButton href={prop.zillow_url}>Zillow Listing →</LinkButton>
                             )}
-                            {auditorUrl && (
-                                prop.apn ? (
-                                    // Direct deep-link when we have the parcel number
-                                    <LinkButton href={auditorUrl}>County Assessor →</LinkButton>
-                                ) : (
-                                    // No APN yet — open search page and copy address to clipboard
-                                    <LinkButton
-                                        href={auditorUrl}
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            const addr = `${prop.address}, ${prop.city || 'Spokane'}, WA`;
-                                            // navigator.clipboard requires HTTPS; use execCommand fallback for HTTP
-                                            const copyFallback = () => {
-                                                const ta = document.createElement('textarea');
-                                                ta.value = addr;
-                                                ta.style.position = 'fixed';
-                                                ta.style.opacity = '0';
-                                                document.body.appendChild(ta);
-                                                ta.focus();
-                                                ta.select();
-                                                document.execCommand('copy');
-                                                document.body.removeChild(ta);
-                                            };
-                                            if (navigator.clipboard) {
-                                                navigator.clipboard.writeText(addr).catch(copyFallback);
-                                            } else {
-                                                copyFallback();
-                                            }
-                                            setCopiedAddress(true);
-                                            setTimeout(() => setCopiedAddress(false), 2000);
-                                            window.open(auditorUrl, '_blank', 'noopener,noreferrer');
-                                        }}
-                                        title="Copies the address to your clipboard, then opens SCOUT's search page"
-                                    >
-                                        {copiedAddress ? '✓ Address Copied!' : 'County Assessor (copy address) →'}
-                                    </LinkButton>
-                                )
-                            )}
                             {streetViewUrl && (
                                 <LinkButton href={streetViewUrl}>Street View →</LinkButton>
                             )}
