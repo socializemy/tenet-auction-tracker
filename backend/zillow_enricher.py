@@ -17,10 +17,10 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
-async def _fetch_property_data(address: str, city: str = "Spokane", state: str = "WA", fetch_estimate: bool = True, fetch_image: bool = True, fetch_apn: bool = True) -> Dict:
+async def _fetch_property_data(address: str, city: str = "Spokane", state: str = "WA", fetch_estimate: bool = True, fetch_image: bool = True, fetch_apn: bool = True, zillow_url: Optional[str] = None) -> Dict:
     """Returns dict with image_url, estimated_value, and extended property details."""
     result = {
-        "image_url": None, "zillow_url": None, "estimated_value": None, 
+        "image_url": None, "zillow_url": zillow_url, "estimated_value": None,
         "bedrooms": None, "bathrooms": None, "square_feet": None,
         "lot_size": None, "property_type": None, "year_built": None, "apn": None
     }
@@ -121,45 +121,37 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
             logger.warning(f"DDG APN extraction error for '{address}': {e}")
 
 
-    # 2. Fetch High-Res Image using Google Images Playwright
-    if fetch_image:
-        query = f"{address} {city} {state} house exterior"
-        url = f"https://www.google.com/search?tbm=isch&q={query.replace(' ', '+')}"
-
-        async def _do_playwright_search():
-            async with async_playwright() as p:
-                browser = await p.chromium.launch(headless=True)
-                context = await browser.new_context(
-                    user_agent=(
-                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                        "AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/124.0.0.0 Safari/537.36"
-                    ),
-                    viewport={"width": 1280, "height": 800},
-                )
-                page = await context.new_page()
-
-                logger.info(f"Fetching Google Images data for: {address}")
-                await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-                await page.wait_for_timeout(2000)
-
-                # Use regex to find high-res image URLs embedded in Google's scripts
-                content = await page.content()
-                urls = re.findall(r'(https?://[^"\\]+?\.(?:jpg|jpeg|png|webp))', content)
-                
-                for u in urls:
-                    u = u.replace('\\u003d', '=').replace('\\u0026', '&')
-                    if 'gstatic' not in u and 'favicon' not in u and 'profile' not in u:
-                        result["image_url"] = u
-                        break
-
-                await browser.close()
-                
+    # 2. Fetch property image from Zillow's og:image meta tag (fast, no bot detection)
+    # We skip the old Google Images Playwright approach — Google blocks VPS IPs aggressively.
+    # Zillow's og:image and zillowstatic CDN URLs are reliable and don't require headless browsers.
+    if fetch_image and result.get("zillow_url"):
         try:
-            # Wrap in a hard timeout to prevent silent container hanging
-            await asyncio.wait_for(_do_playwright_search(), timeout=30.0)
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            }
+            resp = await asyncio.to_thread(
+                requests.get, result["zillow_url"], headers=headers, timeout=10
+            )
+            if resp.status_code == 200:
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                # Try og:image meta tag first
+                og = soup.find('meta', property='og:image')
+                if og and og.get('content'):
+                    result["image_url"] = og['content']
+                    logger.info(f"Got Zillow og:image for {address}")
+                else:
+                    # Fallback: find first zillowstatic CDN photo in page source
+                    imgs = re.findall(
+                        r'https://photos\.zillowstatic\.com/fp/[^"\'\\<>\s]+\.(?:jpg|jpeg|png|webp)',
+                        resp.text
+                    )
+                    if imgs:
+                        result["image_url"] = imgs[0]
+                        logger.info(f"Got Zillow CDN image for {address}")
         except Exception as e:
-            logger.warning(f"Google Image enrichment error for '{address}': {e}")
+            logger.warning(f"Zillow image fetch failed for '{address}': {e}")
 
     return result
 
@@ -182,7 +174,7 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
         if not needs_image and not needs_estimate and not needs_apn:
             continue
 
-        data = await _fetch_property_data(prop.address, prop.city, fetch_estimate=needs_estimate, fetch_image=needs_image, fetch_apn=needs_apn)
+        data = await _fetch_property_data(prop.address, prop.city, fetch_estimate=needs_estimate, fetch_image=needs_image, fetch_apn=needs_apn, zillow_url=prop.zillow_url)
         changed = False
 
         if data.get("image_url") and not prop.image_url:
