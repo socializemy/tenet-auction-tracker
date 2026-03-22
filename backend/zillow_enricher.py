@@ -196,14 +196,17 @@ async def fetch_scout_data(apn: str) -> dict:
             return []
 
         # ── Owner ──────────────────────────────────────────────────────────────
-        # SCOUT layout: label cell "Owner Name:" / value cell in next td
-        for row in soup.find_all("tr"):
-            cells = [c.get_text(strip=True) for c in row.find_all("td")]
-            for i, c in enumerate(cells):
-                if c.lower() in ("owner name:", "owner name") and i + 1 < len(cells):
-                    result["owner_name"] = cells[i + 1]
-                if c.lower() in ("address:", "address") and result["owner_name"] and not result["owner_address"] and i + 1 < len(cells):
-                    result["owner_address"] = cells[i + 1]
+        # SCOUT renders owner info as bold labels inside divs (not table cells):
+        #   <strong>Owner Name:</strong> WILSON, ERIC A
+        #   <strong>Address:</strong> 1759 EDGEFIELD LN, ...
+        # Use regex on full_text which is more robust than table parsing.
+        m = re.search(r'Owner Name:\s*([^\n]+?)(?=\s*Address:|\s*Taxpayer|\s*$)', full_text, re.IGNORECASE)
+        if m:
+            result["owner_name"] = m.group(1).strip()
+        # Owner address: the "Address:" immediately following the owner block
+        m = re.search(r'Owner Name:[^\n]+?Address:\s*([^\n]+?)(?=\s*Taxpayer|\s*$)', full_text, re.IGNORECASE | re.DOTALL)
+        if m:
+            result["owner_address"] = m.group(1).strip()
 
         # ── Site Address table: Land Size, Legal, Parcel Class, TCA ───────────
         # The table has a header row: Parcel Type | Site Address | City | Land Size | ...
