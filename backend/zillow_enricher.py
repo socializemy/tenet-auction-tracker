@@ -182,9 +182,12 @@ async def fetch_scout_data(apn: str) -> dict:
         full_text = soup.get_text(" ", strip=True)
 
         def _money(s):
-            """Parse '$1,234,567' or '1234567' -> int, or None."""
+            """Parse '$1,234,567' or '$29,122.00' or '1234567' -> int, or None."""
             s = re.sub(r'[,$\s]', '', s or '')
-            return int(s) if s.isdigit() else None
+            try:
+                return int(float(s)) if s else None
+            except (ValueError, TypeError):
+                return None
 
         def _table_rows(section_keyword):
             """Find all <tr> rows under the panel whose heading contains section_keyword."""
@@ -328,7 +331,7 @@ async def fetch_scout_data(apn: str) -> dict:
                         sale_date  = cells[date_idx]  if date_idx  < len(cells) else ""
                         sale_price = cells[price_idx] if price_idx < len(cells) else ""
                         instrument = cells[inst_idx]  if inst_idx  < len(cells) else ""
-                        price_val  = _money(sale_price.replace(".", "").replace(",", "")) if sale_price else None
+                        price_val  = _money(sale_price) if sale_price else None
                         if sale_date or price_val:
                             sales.append({"date": sale_date, "price": price_val, "instrument": instrument})
                     except (StopIteration, IndexError):

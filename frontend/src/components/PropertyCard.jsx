@@ -34,7 +34,7 @@ const PropertyCard = ({ property, onClick }) => {
         <div className="property-card" onClick={() => onClick && onClick(property)}>
             <div className="property-card-image">
                 {property.image_url ? (
-                    <img src={property.image_url} alt={property.address} />
+                    <img src={property.image_url} alt={property.address} loading="lazy" />
                 ) : (
                     <div className="image-placeholder">
                         <Home size={32} opacity={0.3} />
