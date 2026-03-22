@@ -5,6 +5,7 @@ and a Street View image via the Google Street View Static API.
 Rate-limited to 1 request per 3 seconds. Results are cached in the DB.
 """
 import asyncio
+import hashlib
 import logging
 import os
 import re
@@ -12,6 +13,11 @@ from typing import Optional, Dict
 
 import requests
 from bs4 import BeautifulSoup
+
+# Local cache directory for Street View images — served by FastAPI StaticFiles
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+STREETVIEW_DIR = os.path.join(BASE_DIR, "streetview_cache")
+os.makedirs(STREETVIEW_DIR, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +125,10 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
             logger.warning(f"DDG APN extraction error for '{address}': {e}")
 
 
-    # 2. Build a Google Street View Static API URL for the property address.
-    # Legitimate API call — no scraping, no bot detection, works reliably from VPS IPs.
-    # Free tier: 25,000 requests/month. Image is served directly by Google on browser load.
+    # 2. Download and cache a Street View image for the property address.
+    # We download once at enrichment time and serve from our own static endpoint
+    # (/api/streetview/<hash>.jpg) so that browser page-loads never hit Google
+    # directly — eliminating per-second quota 503s and hiding the API key.
     if fetch_image:
         try:
             api_key = os.environ.get("GOOGLE_STREET_VIEW_API_KEY", "")
@@ -129,14 +136,28 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
                 logger.warning("GOOGLE_STREET_VIEW_API_KEY not set — skipping Street View image")
             else:
                 location = f"{address}, {city}, {state}".replace(" ", "+")
-                street_view_url = (
+                google_url = (
                     f"https://maps.googleapis.com/maps/api/streetview"
                     f"?size=640x480&location={location}&key={api_key}"
                 )
-                result["image_url"] = street_view_url
-                logger.info(f"Built Street View URL for {address}")
+                addr_hash = hashlib.md5(f"{address},{city},{state}".lower().encode()).hexdigest()[:16]
+                cache_file = os.path.join(STREETVIEW_DIR, f"sv_{addr_hash}.jpg")
+                local_url = f"/api/streetview/sv_{addr_hash}.jpg"
+
+                if os.path.exists(cache_file):
+                    result["image_url"] = local_url
+                    logger.info(f"Street View cache hit for {address}")
+                else:
+                    resp = requests.get(google_url, timeout=10)
+                    if resp.status_code == 200 and resp.headers.get("content-type", "").startswith("image/"):
+                        with open(cache_file, "wb") as f:
+                            f.write(resp.content)
+                        result["image_url"] = local_url
+                        logger.info(f"Cached Street View image for {address} → {cache_file}")
+                    else:
+                        logger.warning(f"Street View fetch failed for '{address}': HTTP {resp.status_code}")
         except Exception as e:
-            logger.warning(f"Street View URL build failed for '{address}': {e}")
+            logger.warning(f"Street View image fetch failed for '{address}': {e}")
 
     return result
 

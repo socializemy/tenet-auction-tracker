@@ -25,6 +25,10 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 PHOTOS_DIR = os.path.join(BASE_DIR, "property_photos")
 os.makedirs(PHOTOS_DIR, exist_ok=True)
 
+# Directory for cached Street View images
+STREETVIEW_DIR = os.path.join(BASE_DIR, "streetview_cache")
+os.makedirs(STREETVIEW_DIR, exist_ok=True)
+
 app = FastAPI(title="Spokane Auction Properties API", version="1.0.0")
 
 app.add_middleware(
@@ -37,6 +41,9 @@ app.add_middleware(
 
 # Serve uploaded photos as static files
 app.mount("/api/photos/files", StaticFiles(directory=PHOTOS_DIR), name="property_photos")
+
+# Serve cached Street View images as static files
+app.mount("/api/streetview", StaticFiles(directory=STREETVIEW_DIR), name="streetview")
 
 
 @app.on_event("startup")
