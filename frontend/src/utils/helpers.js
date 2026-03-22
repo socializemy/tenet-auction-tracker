@@ -1,12 +1,17 @@
 /**
  * Returns the county assessor/auditor deep-link URL for a given APN + county.
  * Spokane County uses the SCOUT parcel search system.
+ *   - With APN  → direct parcel deep-link (no typing required)
+ *   - Without APN → base SCOUT search page (caller should copy address to clipboard)
  */
 export const getCountyAuditorUrl = (apn, county) => {
-    if (!apn) return null;
     const c = (county || '').toLowerCase();
     if (c.includes('spokane')) {
-        return `https://cp.spokanecounty.org/SCOUT/propertyinformation/Default.aspx?parcel=${encodeURIComponent(apn)}`;
+        if (apn) {
+            return `https://cp.spokanecounty.org/SCOUT/propertyinformation/Default.aspx?parcel=${encodeURIComponent(apn)}`;
+        }
+        // No APN yet — send to the search page; caller is expected to copy address to clipboard
+        return 'https://cp.spokanecounty.org/scout/propertyinformation/';
     }
     return null;
 };

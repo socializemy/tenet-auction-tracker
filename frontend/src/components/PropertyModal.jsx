@@ -22,10 +22,11 @@ const DetailRow = ({ label, value, left }) => (
     </div>
 );
 
-const LinkButton = ({ href, children }) => (
+const LinkButton = ({ href, children, onClick, title }) => (
     <a
         href={href}
         target="_blank"
+        title={title}
         rel="noopener noreferrer"
         style={{
             padding: '0.4rem 0.9rem',
@@ -40,6 +41,7 @@ const LinkButton = ({ href, children }) => (
         }}
         onMouseOver={e => { e.currentTarget.style.borderColor = 'var(--accent-primary)'; e.currentTarget.style.color = 'var(--accent-primary)'; }}
         onMouseOut={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+        onClick={onClick}
     >
         {children}
     </a>
@@ -324,7 +326,22 @@ const PropertyModal = ({ property: prop, onClose }) => {
                                 <LinkButton href={prop.zillow_url}>Zillow Listing →</LinkButton>
                             )}
                             {auditorUrl && (
-                                <LinkButton href={auditorUrl}>County Assessor →</LinkButton>
+                                prop.apn ? (
+                                    // Direct deep-link when we have the parcel number
+                                    <LinkButton href={auditorUrl}>County Assessor →</LinkButton>
+                                ) : (
+                                    // No APN yet — open search page and copy address to clipboard
+                                    <LinkButton
+                                        href={auditorUrl}
+                                        onClick={() => {
+                                            const addr = `${prop.address}, ${prop.city || 'Spokane'}, WA`;
+                                            navigator.clipboard.writeText(addr).catch(() => {});
+                                        }}
+                                        title={`Address copied to clipboard — paste into SCOUT's search box`}
+                                    >
+                                        County Assessor (copy address) →
+                                    </LinkButton>
+                                )
                             )}
                             {streetViewUrl && (
                                 <LinkButton href={streetViewUrl}>Street View →</LinkButton>
