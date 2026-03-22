@@ -73,6 +73,7 @@ const PropertyModal = ({ property: prop, onClose }) => {
     const streetViewUrl = getStreetViewUrl(prop.address, prop.city);
 
     // ── Notes state ──
+    const [copiedAddress, setCopiedAddress] = useState(false);
     const [notes, setNotes] = useState([]);
     const [notesLoading, setNotesLoading] = useState(true);
     const [noteAuthor, setNoteAuthor] = useState('');
@@ -334,13 +335,33 @@ const PropertyModal = ({ property: prop, onClose }) => {
                                     // No APN yet — open search page and copy address to clipboard
                                     <LinkButton
                                         href={auditorUrl}
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.preventDefault();
                                             const addr = `${prop.address}, ${prop.city || 'Spokane'}, WA`;
-                                            navigator.clipboard.writeText(addr).catch(() => {});
+                                            // navigator.clipboard requires HTTPS; use execCommand fallback for HTTP
+                                            const copyFallback = () => {
+                                                const ta = document.createElement('textarea');
+                                                ta.value = addr;
+                                                ta.style.position = 'fixed';
+                                                ta.style.opacity = '0';
+                                                document.body.appendChild(ta);
+                                                ta.focus();
+                                                ta.select();
+                                                document.execCommand('copy');
+                                                document.body.removeChild(ta);
+                                            };
+                                            if (navigator.clipboard) {
+                                                navigator.clipboard.writeText(addr).catch(copyFallback);
+                                            } else {
+                                                copyFallback();
+                                            }
+                                            setCopiedAddress(true);
+                                            setTimeout(() => setCopiedAddress(false), 2000);
+                                            window.open(auditorUrl, '_blank', 'noopener,noreferrer');
                                         }}
-                                        title={`Address copied to clipboard — paste into SCOUT's search box`}
+                                        title="Copies the address to your clipboard, then opens SCOUT's search page"
                                     >
-                                        County Assessor (copy address) →
+                                        {copiedAddress ? '✓ Address Copied!' : 'County Assessor (copy address) →'}
                                     </LinkButton>
                                 )
                             )}
@@ -470,6 +491,78 @@ const PropertyModal = ({ property: prop, onClose }) => {
                             );
                         })()}
 
+                    </div>
+                )}
+
+                {/* ── No County Record yet ── */}
+                {!prop.scout_fetched_at && (
+                    <div style={{ padding: '1.25rem 2rem', borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
+                            <div style={{ flex: 1, minWidth: '200px' }}>
+                                <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
+                                    County Record
+                                </div>
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.6rem' }}>
+                                    No county data scraped yet for this property.
+                                    Search SCOUT manually using the address below.
+                                </div>
+                                <div style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
+                                    background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                    borderRadius: '4px', padding: '0.4rem 0.7rem',
+                                    fontSize: '0.9rem', fontFamily: 'monospace', color: 'var(--text-primary)',
+                                    userSelect: 'all', cursor: 'text',
+                                }}>
+                                    {prop.address}{prop.city ? `, ${prop.city}` : ''}{', WA'}
+                                </div>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignSelf: 'center' }}>
+                                <button
+                                    onClick={() => {
+                                        const addr = `${prop.address}, ${prop.city || 'Spokane'}, WA`;
+                                        const copyFallback = () => {
+                                            const ta = document.createElement('textarea');
+                                            ta.value = addr;
+                                            ta.style.position = 'fixed';
+                                            ta.style.opacity = '0';
+                                            document.body.appendChild(ta);
+                                            ta.focus();
+                                            ta.select();
+                                            document.execCommand('copy');
+                                            document.body.removeChild(ta);
+                                        };
+                                        if (navigator.clipboard) {
+                                            navigator.clipboard.writeText(addr).catch(copyFallback);
+                                        } else {
+                                            copyFallback();
+                                        }
+                                        setCopiedAddress(true);
+                                        setTimeout(() => setCopiedAddress(false), 2000);
+                                    }}
+                                    style={{
+                                        padding: '0.4rem 0.9rem', fontSize: '0.82rem', fontWeight: 600,
+                                        background: copiedAddress ? '#16a34a' : 'var(--accent-primary)',
+                                        color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                                        transition: 'background 0.2s ease', whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    {copiedAddress ? '✓ Copied!' : 'Copy Address'}
+                                </button>
+                                <a
+                                    href="https://cp.spokanecounty.org/scout/propertyinformation/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        padding: '0.4rem 0.9rem', fontSize: '0.82rem', fontWeight: 500,
+                                        background: 'var(--bg-primary)', border: '1px solid var(--border-color)',
+                                        borderRadius: '4px', textDecoration: 'none',
+                                        color: 'var(--text-primary)', textAlign: 'center', whiteSpace: 'nowrap',
+                                    }}
+                                >
+                                    Open SCOUT ↗
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 )}
 
