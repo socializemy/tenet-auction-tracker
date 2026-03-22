@@ -12,6 +12,8 @@ services:
     volumes:
       # Mount the manual data ingest & database folder for offline parsing / safe sqlite states
       - ./backend/data:/app/data
+      # Persist team-uploaded property photos across container rebuilds
+      - ./backend/property_photos:/app/property_photos
     restart: unless-stopped
 
   frontend:
