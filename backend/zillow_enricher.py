@@ -124,14 +124,17 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
     # Free tier: 25,000 requests/month. Image is served directly by Google on browser load.
     if fetch_image:
         try:
-            api_key = os.environ.get("GOOGLE_STREET_VIEW_API_KEY", "AIzaSyBPrsUz1n4Y8DYC4lYzQntSFG0kSohuf_Y")
-            location = f"{address}, {city}, {state}".replace(" ", "+")
-            street_view_url = (
-                f"https://maps.googleapis.com/maps/api/streetview"
-                f"?size=640x480&location={location}&key={api_key}"
-            )
-            result["image_url"] = street_view_url
-            logger.info(f"Built Street View URL for {address}")
+            api_key = os.environ.get("GOOGLE_STREET_VIEW_API_KEY", "")
+            if not api_key:
+                logger.warning("GOOGLE_STREET_VIEW_API_KEY not set — skipping Street View image")
+            else:
+                location = f"{address}, {city}, {state}".replace(" ", "+")
+                street_view_url = (
+                    f"https://maps.googleapis.com/maps/api/streetview"
+                    f"?size=640x480&location={location}&key={api_key}"
+                )
+                result["image_url"] = street_view_url
+                logger.info(f"Built Street View URL for {address}")
         except Exception as e:
             logger.warning(f"Street View URL build failed for '{address}': {e}")
 

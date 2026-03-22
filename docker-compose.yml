@@ -8,7 +8,7 @@ services:
     environment:
       - CHROME_BIN_PATH=/usr/bin/google-chrome
       - DATABASE_URL=sqlite:////app/data/auction_data.db
-      # Add environment variables here if needed (e.g., QUALITY_LOAN_USER)
+      - GOOGLE_STREET_VIEW_API_KEY=${GOOGLE_STREET_VIEW_API_KEY}
     volumes:
       # Mount the manual data ingest & database folder for offline parsing / safe sqlite states
       - ./backend/data:/app/data
