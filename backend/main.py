@@ -91,8 +91,8 @@ class PropertyResponse(BaseModel):
     scout_garage_sqft:   Optional[int]   = None
     scout_sales:         Optional[str]   = None
     scout_permits:       Optional[str]   = None
-    scout_fetched_at:    Optional[str]   = None
-    last_seen_at: Optional[str]
+    scout_fetched_at:    Optional[datetime] = None
+    last_seen_at: Optional[datetime]
 
     class Config:
         from_attributes = True
