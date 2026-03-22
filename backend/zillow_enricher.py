@@ -1,21 +1,19 @@
 """
-Property enrichment: given a property address, look up a photo
-using Playwright to scrape Google Image search results.
-(Zillow, Redfin, and Realtor are aggressively blocking headless browsers with CAPTCHAs).
+Property enrichment: given a property address, fetch property details via DuckDuckGo
+and a Street View image via the Google Street View Static API.
 
 Rate-limited to 1 request per 3 seconds. Results are cached in the DB.
 """
 import asyncio
 import logging
+import os
+import re
 from typing import Optional, Dict
-
-from playwright.async_api import async_playwright
-
-logger = logging.getLogger(__name__)
 
 import requests
 from bs4 import BeautifulSoup
-import re
+
+logger = logging.getLogger(__name__)
 
 async def _fetch_property_data(address: str, city: str = "Spokane", state: str = "WA", fetch_estimate: bool = True, fetch_image: bool = True, fetch_apn: bool = True, zillow_url: Optional[str] = None) -> Dict:
     """Returns dict with image_url, estimated_value, and extended property details."""
@@ -121,37 +119,21 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
             logger.warning(f"DDG APN extraction error for '{address}': {e}")
 
 
-    # 2. Fetch property image from Zillow's og:image meta tag (fast, no bot detection)
-    # We skip the old Google Images Playwright approach — Google blocks VPS IPs aggressively.
-    # Zillow's og:image and zillowstatic CDN URLs are reliable and don't require headless browsers.
-    if fetch_image and result.get("zillow_url"):
+    # 2. Build a Google Street View Static API URL for the property address.
+    # Legitimate API call — no scraping, no bot detection, works reliably from VPS IPs.
+    # Free tier: 25,000 requests/month. Image is served directly by Google on browser load.
+    if fetch_image:
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-US,en;q=0.9',
-            }
-            resp = await asyncio.to_thread(
-                requests.get, result["zillow_url"], headers=headers, timeout=10
+            api_key = os.environ.get("GOOGLE_STREET_VIEW_API_KEY", "AIzaSyBPrsUz1n4Y8DYC4lYzQntSFG0kSohuf_Y")
+            location = f"{address}, {city}, {state}".replace(" ", "+")
+            street_view_url = (
+                f"https://maps.googleapis.com/maps/api/streetview"
+                f"?size=640x480&location={location}&key={api_key}"
             )
-            if resp.status_code == 200:
-                soup = BeautifulSoup(resp.text, 'html.parser')
-                # Try og:image meta tag first
-                og = soup.find('meta', property='og:image')
-                if og and og.get('content'):
-                    result["image_url"] = og['content']
-                    logger.info(f"Got Zillow og:image for {address}")
-                else:
-                    # Fallback: find first zillowstatic CDN photo in page source
-                    imgs = re.findall(
-                        r'https://photos\.zillowstatic\.com/fp/[^"\'\\<>\s]+\.(?:jpg|jpeg|png|webp)',
-                        resp.text
-                    )
-                    if imgs:
-                        result["image_url"] = imgs[0]
-                        logger.info(f"Got Zillow CDN image for {address}")
+            result["image_url"] = street_view_url
+            logger.info(f"Built Street View URL for {address}")
         except Exception as e:
-            logger.warning(f"Zillow image fetch failed for '{address}': {e}")
+            logger.warning(f"Street View URL build failed for '{address}': {e}")
 
     return result
 
