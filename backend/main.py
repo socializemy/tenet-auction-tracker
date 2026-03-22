@@ -73,12 +73,25 @@ class PropertyResponse(BaseModel):
     year_built: Optional[int]
     apn: Optional[str]
     # Spokane County SCOUT assessor data
-    assessed_value: Optional[int] = None
-    owner_name: Optional[str] = None
-    annual_taxes: Optional[int] = None
-    last_sale_price: Optional[int] = None
-    last_sale_date: Optional[str] = None
-    scout_fetched_at: Optional[str] = None
+    assessed_value:      Optional[int]   = None
+    assessed_land:       Optional[int]   = None
+    assessed_building:   Optional[int]   = None
+    owner_name:          Optional[str]   = None
+    owner_address:       Optional[str]   = None
+    annual_taxes:        Optional[int]   = None
+    taxes_owing:         Optional[float] = None
+    last_sale_price:     Optional[int]   = None
+    last_sale_date:      Optional[str]   = None
+    scout_legal:         Optional[str]   = None
+    scout_parcel_class:  Optional[str]   = None
+    scout_tca:           Optional[str]   = None
+    scout_land_sqft:     Optional[int]   = None
+    scout_house_type:    Optional[str]   = None
+    scout_basement_sqft: Optional[int]   = None
+    scout_garage_sqft:   Optional[int]   = None
+    scout_sales:         Optional[str]   = None
+    scout_permits:       Optional[str]   = None
+    scout_fetched_at:    Optional[str]   = None
     last_seen_at: Optional[str]
 
     class Config:

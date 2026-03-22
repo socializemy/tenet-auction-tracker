@@ -352,44 +352,123 @@ const PropertyModal = ({ property: prop, onClose }) => {
                 </div>
 
                 {/* ── County Record (SCOUT) ── */}
-                {(prop.owner_name || prop.assessed_value || prop.annual_taxes || prop.last_sale_price) && (
+                {prop.scout_fetched_at && (
                     <div style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-color)' }}>
-                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-                            County Record
+
+                        {/* Section header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                County Record
+                                <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 400 }}>
+                                    Spokane County SCOUT
+                                </span>
+                            </div>
                             {prop.apn && (
-                                <a
-                                    href={`https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID=${encodeURIComponent(prop.apn)}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{ marginLeft: '0.75rem', fontSize: '0.7rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 500 }}
-                                >
-                                    View on SCOUT ↗
+                                <a href={`https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID=${encodeURIComponent(prop.apn)}`}
+                                   target="_blank" rel="noopener noreferrer"
+                                   style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 500 }}>
+                                    View Full Record ↗
                                 </a>
                             )}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderTop: '1px solid var(--border-color)', fontSize: '0.95rem' }}>
-                            {prop.owner_name && (
-                                <DetailRow label="Owner of Record" value={prop.owner_name} left style={{ gridColumn: '1 / -1' }} />
-                            )}
-                            <DetailRow
-                                label="Assessed Value"
-                                value={prop.assessed_value ? `$${prop.assessed_value.toLocaleString()}` : null}
-                                left
-                            />
-                            <DetailRow
-                                label="Annual Taxes"
-                                value={prop.annual_taxes ? `$${prop.annual_taxes.toLocaleString()}` : null}
-                            />
-                            <DetailRow
-                                label="Last Sale Price"
-                                value={prop.last_sale_price ? `$${prop.last_sale_price.toLocaleString()}` : null}
-                                left
-                            />
-                            <DetailRow
-                                label="Last Sale Date"
-                                value={prop.last_sale_date}
-                            />
+
+                        {/* Owner card */}
+                        {prop.owner_name && (
+                            <div style={{ background: 'var(--bg-secondary)', borderRadius: '6px', padding: '0.75rem 1rem', marginBottom: '1rem', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Owner of Record</div>
+                                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{prop.owner_name}</div>
+                                    {prop.owner_address && <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{prop.owner_address}</div>}
+                                </div>
+                                {prop.scout_legal && (
+                                    <div>
+                                        <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>Legal Description</div>
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-primary)' }}>{prop.scout_legal}</div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Assessment + Tax grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1rem' }}>
+                            {[
+                                { label: 'Total Assessed', value: prop.assessed_value ? `$${prop.assessed_value.toLocaleString()}` : null },
+                                { label: 'Land Value',     value: prop.assessed_land     ? `$${prop.assessed_land.toLocaleString()}`     : null },
+                                { label: 'Building Value', value: prop.assessed_building ? `$${prop.assessed_building.toLocaleString()}` : null },
+                                { label: 'Annual Taxes',   value: prop.annual_taxes  ? `$${prop.annual_taxes.toLocaleString()}`  : null },
+                                { label: 'Taxes Owing',    value: prop.taxes_owing   ? `$${prop.taxes_owing.toLocaleString()}`   : null, highlight: prop.taxes_owing > 0 },
+                                { label: 'Lot Size (County)', value: prop.scout_land_sqft ? `${prop.scout_land_sqft.toLocaleString()} sq ft` : null },
+                            ].filter(r => r.value).map(({ label, value, highlight }) => (
+                                <div key={label} style={{ background: 'var(--bg-secondary)', borderRadius: '6px', padding: '0.6rem 0.8rem' }}>
+                                    <div style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: '0.2rem' }}>{label}</div>
+                                    <div style={{ fontWeight: 700, fontSize: '1rem', color: highlight ? '#dc2626' : 'var(--text-primary)' }}>{value}</div>
+                                </div>
+                            ))}
                         </div>
+
+                        {/* County characteristics row */}
+                        {(prop.scout_house_type || prop.scout_basement_sqft || prop.scout_garage_sqft || prop.scout_parcel_class) && (
+                            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                                {prop.scout_parcel_class && <span><strong style={{ color: 'var(--text-primary)' }}>Class:</strong> {prop.scout_parcel_class}</span>}
+                                {prop.scout_house_type   && <span><strong style={{ color: 'var(--text-primary)' }}>Type:</strong> {prop.scout_house_type}</span>}
+                                {prop.scout_basement_sqft && <span><strong style={{ color: 'var(--text-primary)' }}>Basement:</strong> {prop.scout_basement_sqft.toLocaleString()} sq ft</span>}
+                                {prop.scout_garage_sqft  && <span><strong style={{ color: 'var(--text-primary)' }}>Garage:</strong> {prop.scout_garage_sqft.toLocaleString()} sq ft</span>}
+                                {prop.scout_tca          && <span><strong style={{ color: 'var(--text-primary)' }}>TCA:</strong> {prop.scout_tca}</span>}
+                            </div>
+                        )}
+
+                        {/* Sales History */}
+                        {prop.scout_sales && (() => {
+                            let sales = [];
+                            try { sales = JSON.parse(prop.scout_sales); } catch {}
+                            if (!sales.length) return null;
+                            return (
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Sales History</div>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                                        <thead>
+                                            <tr style={{ background: 'var(--bg-secondary)' }}>
+                                                {['Date', 'Sale Price', 'Instrument'].map(h => (
+                                                    <th key={h} style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sales.map((s, i) => (
+                                                <tr key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                                    <td style={{ padding: '0.4rem 0.6rem', color: 'var(--text-secondary)' }}>{s.date}</td>
+                                                    <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600, color: 'var(--text-primary)' }}>{s.price ? `$${Number(s.price).toLocaleString()}` : '—'}</td>
+                                                    <td style={{ padding: '0.4rem 0.6rem', color: 'var(--text-secondary)' }}>{s.instrument}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            );
+                        })()}
+
+                        {/* Permit History */}
+                        {prop.scout_permits && (() => {
+                            let permits = [];
+                            try { permits = JSON.parse(prop.scout_permits); } catch {}
+                            if (!permits.length) return null;
+                            return (
+                                <div>
+                                    <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Permit History</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                        {permits.slice(0, 8).map((p, i) => (
+                                            <div key={i} style={{ display: 'flex', gap: '0.75rem', fontSize: '0.82rem', padding: '0.35rem 0', borderBottom: '1px solid var(--border-color)' }}>
+                                                <span style={{ fontFamily: 'monospace', color: 'var(--accent-primary)', minWidth: '110px', flexShrink: 0 }}>{p.number}</span>
+                                                <span style={{ color: 'var(--text-secondary)', minWidth: '80px', flexShrink: 0 }}>{p.date}</span>
+                                                <span style={{ color: 'var(--text-primary)' }}>{p.description}</span>
+                                            </div>
+                                        ))}
+                                        {permits.length > 8 && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', paddingTop: '0.25rem' }}>+{permits.length - 8} more permits — <a href={`https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID=${encodeURIComponent(prop.apn)}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent-primary)' }}>view all on SCOUT</a></div>}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
                     </div>
                 )}
 
