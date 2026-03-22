@@ -1,7 +1,7 @@
 import os
 import json
-from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy import create_engine, Column, Integer, String, Float, Date, DateTime, Text, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -48,6 +48,30 @@ class Property(Base):
     last_seen_at = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class PropertyNote(Base):
+    """Team-visible notes attached to a property."""
+    __tablename__ = "property_notes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    property_id = Column(Integer, ForeignKey("properties.id", ondelete="CASCADE"), nullable=False, index=True)
+    author = Column(String, nullable=False, default="Team")
+    body = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class PropertyPhoto(Base):
+    """Team-uploaded photos for a property."""
+    __tablename__ = "property_photos"
+
+    id = Column(Integer, primary_key=True, index=True)
+    property_id = Column(Integer, ForeignKey("properties.id", ondelete="CASCADE"), nullable=False, index=True)
+    filename = Column(String, nullable=False)       # stored filename on disk
+    caption = Column(String, nullable=True)
+    uploaded_by = Column(String, nullable=True, default="Team")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 
 def init_db():
     Base.metadata.create_all(bind=engine)

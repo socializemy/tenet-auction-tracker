@@ -1,18 +1,29 @@
-from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func as sa_func
 from pydantic import BaseModel
 from typing import List, Optional
 import json
 import logging
+import os
+import shutil
+import uuid
+from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-from database import Property, get_db, init_db
+from database import Property, PropertyNote, PropertyPhoto, get_db, init_db
 from run_scrapers import run_all_scrapers, get_scrape_status
+
+# Directory for team-uploaded property photos
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PHOTOS_DIR = os.path.join(BASE_DIR, "property_photos")
+os.makedirs(PHOTOS_DIR, exist_ok=True)
 
 app = FastAPI(title="Spokane Auction Properties API", version="1.0.0")
 
@@ -24,19 +35,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve uploaded photos as static files
+app.mount("/api/photos/files", StaticFiles(directory=PHOTOS_DIR), name="property_photos")
+
 
 @app.on_event("startup")
 def on_startup():
     init_db()
 
 
-# --- Response Models ---
+# ──────────────────────────────────────────
+# Response / Request Models
+# ──────────────────────────────────────────
+
 class PropertyResponse(BaseModel):
     id: int
     tsn: Optional[str]
     source: str
-    sources_list: Optional[str]  # JSON
-    source_urls: Optional[str]   # JSON
+    sources_list: Optional[str]
+    source_urls: Optional[str]
     address: str
     city: str
     county: str
@@ -61,7 +78,39 @@ class PropertyResponse(BaseModel):
         from_attributes = True
 
 
-# --- Endpoints ---
+class NoteCreate(BaseModel):
+    author: Optional[str] = "Team"
+    body: str
+
+
+class NoteResponse(BaseModel):
+    id: int
+    property_id: int
+    author: str
+    body: str
+    created_at: str
+    updated_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class PhotoResponse(BaseModel):
+    id: int
+    property_id: int
+    filename: str
+    caption: Optional[str]
+    uploaded_by: Optional[str]
+    created_at: str
+    url: str          # full path the frontend can use to display the image
+
+    class Config:
+        from_attributes = True
+
+
+# ──────────────────────────────────────────
+# Properties
+# ──────────────────────────────────────────
 
 @app.get("/api/properties", response_model=List[PropertyResponse])
 def get_properties(
@@ -91,7 +140,6 @@ def get_properties(
         query = query.order_by(Property.estimated_value.desc())
 
     results = query.all()
-    # Convert datetime fields to string for response
     for r in results:
         if r.last_seen_at:
             r.last_seen_at = r.last_seen_at.isoformat() + "Z"
@@ -108,26 +156,174 @@ def get_property(property_id: int, db: Session = Depends(get_db)):
     return prop
 
 
+# ──────────────────────────────────────────
+# Notes
+# ──────────────────────────────────────────
+
+@app.get("/api/properties/{property_id}/notes", response_model=List[NoteResponse])
+def get_notes(property_id: int, db: Session = Depends(get_db)):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    notes = (
+        db.query(PropertyNote)
+        .filter(PropertyNote.property_id == property_id)
+        .order_by(PropertyNote.created_at.desc())
+        .all()
+    )
+    for n in notes:
+        n.created_at = n.created_at.isoformat() + "Z"
+        n.updated_at = n.updated_at.isoformat() + "Z"
+    return notes
+
+
+@app.post("/api/properties/{property_id}/notes", response_model=NoteResponse, status_code=201)
+def add_note(property_id: int, payload: NoteCreate, db: Session = Depends(get_db)):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    if not payload.body.strip():
+        raise HTTPException(status_code=422, detail="Note body cannot be empty")
+    note = PropertyNote(
+        property_id=property_id,
+        author=payload.author or "Team",
+        body=payload.body.strip(),
+    )
+    db.add(note)
+    db.commit()
+    db.refresh(note)
+    note.created_at = note.created_at.isoformat() + "Z"
+    note.updated_at = note.updated_at.isoformat() + "Z"
+    return note
+
+
+@app.delete("/api/properties/{property_id}/notes/{note_id}", status_code=204)
+def delete_note(property_id: int, note_id: int, db: Session = Depends(get_db)):
+    note = db.query(PropertyNote).filter(
+        PropertyNote.id == note_id,
+        PropertyNote.property_id == property_id,
+    ).first()
+    if not note:
+        raise HTTPException(status_code=404, detail="Note not found")
+    db.delete(note)
+    db.commit()
+
+
+# ──────────────────────────────────────────
+# Photos
+# ──────────────────────────────────────────
+
+@app.get("/api/properties/{property_id}/photos", response_model=List[PhotoResponse])
+def get_photos(property_id: int, db: Session = Depends(get_db)):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+    photos = (
+        db.query(PropertyPhoto)
+        .filter(PropertyPhoto.property_id == property_id)
+        .order_by(PropertyPhoto.created_at.asc())
+        .all()
+    )
+    result = []
+    for p in photos:
+        result.append(PhotoResponse(
+            id=p.id,
+            property_id=p.property_id,
+            filename=p.filename,
+            caption=p.caption,
+            uploaded_by=p.uploaded_by,
+            created_at=p.created_at.isoformat() + "Z",
+            url=f"/api/photos/files/{p.filename}",
+        ))
+    return result
+
+
+@app.post("/api/properties/{property_id}/photos", response_model=PhotoResponse, status_code=201)
+async def upload_photo(
+    property_id: int,
+    file: UploadFile = File(...),
+    caption: Optional[str] = Form(None),
+    uploaded_by: Optional[str] = Form("Team"),
+    db: Session = Depends(get_db),
+):
+    prop = db.query(Property).filter(Property.id == property_id).first()
+    if not prop:
+        raise HTTPException(status_code=404, detail="Property not found")
+
+    # Validate file type
+    allowed = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+    if file.content_type not in allowed:
+        raise HTTPException(status_code=422, detail="Only JPEG, PNG, WebP, and GIF images are accepted")
+
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    unique_name = f"{property_id}_{uuid.uuid4().hex}.{ext}"
+    dest = os.path.join(PHOTOS_DIR, unique_name)
+
+    with open(dest, "wb") as out:
+        shutil.copyfileobj(file.file, out)
+
+    photo = PropertyPhoto(
+        property_id=property_id,
+        filename=unique_name,
+        caption=caption,
+        uploaded_by=uploaded_by or "Team",
+    )
+    db.add(photo)
+    db.commit()
+    db.refresh(photo)
+
+    return PhotoResponse(
+        id=photo.id,
+        property_id=photo.property_id,
+        filename=photo.filename,
+        caption=photo.caption,
+        uploaded_by=photo.uploaded_by,
+        created_at=photo.created_at.isoformat() + "Z",
+        url=f"/api/photos/files/{photo.filename}",
+    )
+
+
+@app.delete("/api/properties/{property_id}/photos/{photo_id}", status_code=204)
+def delete_photo(property_id: int, photo_id: int, db: Session = Depends(get_db)):
+    photo = db.query(PropertyPhoto).filter(
+        PropertyPhoto.id == photo_id,
+        PropertyPhoto.property_id == property_id,
+    ).first()
+    if not photo:
+        raise HTTPException(status_code=404, detail="Photo not found")
+    # Remove file from disk
+    dest = os.path.join(PHOTOS_DIR, photo.filename)
+    if os.path.exists(dest):
+        os.remove(dest)
+    db.delete(photo)
+    db.commit()
+
+
+# ──────────────────────────────────────────
+# Scraper control
+# ──────────────────────────────────────────
+
 @app.post("/api/trigger-scrape")
 async def trigger_scrape(background_tasks: BackgroundTasks):
     """Manually trigger a full scrape + dedup + Zillow enrichment."""
     status = get_scrape_status()
     if status.get("running"):
         return {"message": "Scrape already in progress", "status": status}
-
     background_tasks.add_task(run_all_scrapers)
     return {"message": "Scrape triggered — running in background"}
 
 
 @app.get("/api/scrape-status")
 def scrape_status():
-    """Returns the status of the last/current scrape run."""
     return get_scrape_status()
 
 
+# ──────────────────────────────────────────
+# Stats
+# ──────────────────────────────────────────
+
 @app.get("/api/stats")
 def get_stats(db: Session = Depends(get_db)):
-    """Summary statistics for the dashboard."""
     total = db.query(Property).count()
     by_source = (
         db.query(Property.source, sa_func.count(Property.id))

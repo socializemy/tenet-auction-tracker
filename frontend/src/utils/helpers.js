@@ -1,3 +1,48 @@
+/**
+ * Returns the county assessor/auditor deep-link URL for a given APN + county.
+ * Spokane County uses the SCOUT parcel search system.
+ */
+export const getCountyAuditorUrl = (apn, county) => {
+    if (!apn) return null;
+    const c = (county || '').toLowerCase();
+    if (c.includes('spokane')) {
+        return `https://cp.spokanecounty.org/SCOUT/propertyinformation/Default.aspx?parcel=${encodeURIComponent(apn)}`;
+    }
+    return null;
+};
+
+/**
+ * Returns a Google Street View URL for a given address + city.
+ */
+export const getStreetViewUrl = (address, city) => {
+    if (!address) return null;
+    const query = encodeURIComponent(`${address}, ${city || ''}, WA`);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
+};
+
+/**
+ * Computes bid-to-value ratio as a percentage string (e.g. "64.2").
+ * Returns null if inputs are missing or zero.
+ */
+export const computeBidRatio = (bid, value) => {
+    if (!bid || !value || value === 0) return null;
+    return ((bid / value) * 100).toFixed(1);
+};
+
+/**
+ * Returns a color token based on bid-to-value ratio:
+ *   < 60%  = green (strong deal)
+ *   60–79% = orange (moderate)
+ *   ≥ 80%  = red (thin margin)
+ */
+export const bidRatioColor = (ratioStr) => {
+    if (!ratioStr) return 'var(--text-secondary)';
+    const r = parseFloat(ratioStr);
+    if (r < 60) return '#059669';
+    if (r < 80) return '#d97706';
+    return '#dc2626';
+};
+
 export const formatAuctionDateInfo = (dateString, timeString) => {
     if (!dateString) return { pillText: null, bottomDate: 'TBD' };
 

@@ -34,6 +34,61 @@ export async function fetchStats() {
     return res.json();
 }
 
+// ── Notes ──────────────────────────────────────────────────────────────
+
+export async function fetchNotes(propertyId) {
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/notes`);
+    if (!res.ok) throw new Error("Failed to fetch notes");
+    return res.json();
+}
+
+export async function addNote(propertyId, author, body) {
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ author, body }),
+    });
+    if (!res.ok) throw new Error("Failed to add note");
+    return res.json();
+}
+
+export async function deleteNote(propertyId, noteId) {
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/notes/${noteId}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete note");
+}
+
+// ── Photos ─────────────────────────────────────────────────────────────
+
+export async function fetchPhotos(propertyId) {
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/photos`);
+    if (!res.ok) throw new Error("Failed to fetch photos");
+    return res.json();
+}
+
+export async function uploadPhoto(propertyId, file, caption = "", uploadedBy = "Team") {
+    const form = new FormData();
+    form.append("file", file);
+    if (caption) form.append("caption", caption);
+    form.append("uploaded_by", uploadedBy);
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/photos`, {
+        method: "POST",
+        body: form,
+    });
+    if (!res.ok) throw new Error("Failed to upload photo");
+    return res.json();
+}
+
+export async function deletePhoto(propertyId, photoId) {
+    const res = await fetch(`${API_BASE}/api/properties/${propertyId}/photos/${photoId}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete photo");
+}
+
+// ── CSV Export ──────────────────────────────────────────────────────────
+
 export function exportCsv(properties) {
     const headers = [
         "address", "city", "county", "auction_date", "auction_time",
