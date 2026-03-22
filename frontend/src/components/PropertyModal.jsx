@@ -351,6 +351,48 @@ const PropertyModal = ({ property: prop, onClose }) => {
 
                 </div>
 
+                {/* ── County Record (SCOUT) ── */}
+                {(prop.owner_name || prop.assessed_value || prop.annual_taxes || prop.last_sale_price) && (
+                    <div style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-color)' }}>
+                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                            County Record
+                            {prop.apn && (
+                                <a
+                                    href={`https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID=${encodeURIComponent(prop.apn)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ marginLeft: '0.75rem', fontSize: '0.7rem', color: 'var(--accent-primary)', textDecoration: 'none', fontWeight: 500 }}
+                                >
+                                    View on SCOUT ↗
+                                </a>
+                            )}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0', borderTop: '1px solid var(--border-color)', fontSize: '0.95rem' }}>
+                            {prop.owner_name && (
+                                <DetailRow label="Owner of Record" value={prop.owner_name} left style={{ gridColumn: '1 / -1' }} />
+                            )}
+                            <DetailRow
+                                label="Assessed Value"
+                                value={prop.assessed_value ? `$${prop.assessed_value.toLocaleString()}` : null}
+                                left
+                            />
+                            <DetailRow
+                                label="Annual Taxes"
+                                value={prop.annual_taxes ? `$${prop.annual_taxes.toLocaleString()}` : null}
+                            />
+                            <DetailRow
+                                label="Last Sale Price"
+                                value={prop.last_sale_price ? `$${prop.last_sale_price.toLocaleString()}` : null}
+                                left
+                            />
+                            <DetailRow
+                                label="Last Sale Date"
+                                value={prop.last_sale_date}
+                            />
+                        </div>
+                    </div>
+                )}
+
                 {/* ── Team Photos ── */}
                 <div style={{ padding: '1.5rem 2rem', borderTop: '1px solid var(--border-color)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>

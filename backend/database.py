@@ -45,6 +45,13 @@ class Property(Base):
     status = Column(String, default="Active")
     zillow_url = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
+    # Spokane County SCOUT assessor data
+    assessed_value = Column(Integer, nullable=True)
+    owner_name = Column(String, nullable=True)
+    annual_taxes = Column(Integer, nullable=True)
+    last_sale_price = Column(Integer, nullable=True)
+    last_sale_date = Column(String, nullable=True)
+    scout_fetched_at = Column(DateTime, nullable=True)
     last_seen_at = Column(DateTime, default=datetime.utcnow)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -75,6 +82,31 @@ class PropertyPhoto(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    _migrate_add_columns()
+
+def _migrate_add_columns():
+    """Add any new columns that don't yet exist in the live SQLite database."""
+    new_cols = [
+        ("assessed_value",  "INTEGER"),
+        ("owner_name",      "TEXT"),
+        ("annual_taxes",    "INTEGER"),
+        ("last_sale_price", "INTEGER"),
+        ("last_sale_date",  "TEXT"),
+        ("scout_fetched_at","TEXT"),
+    ]
+    import sqlite3
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    if not os.path.exists(db_path):
+        return
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    cur.execute("PRAGMA table_info(properties)")
+    existing = {row[1] for row in cur.fetchall()}
+    for col_name, col_type in new_cols:
+        if col_name not in existing:
+            cur.execute(f"ALTER TABLE properties ADD COLUMN {col_name} {col_type}")
+    conn.commit()
+    conn.close()
 
 def get_db():
     db = SessionLocal()

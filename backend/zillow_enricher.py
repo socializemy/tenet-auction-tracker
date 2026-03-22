@@ -137,6 +137,106 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
 
     return result
 
+async def fetch_scout_data(apn: str) -> dict:
+    """
+    Fetch owner, assessed value, taxes, and last sale from Spokane County SCOUT.
+    URL: https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID={apn}
+    Returns a dict with keys: owner_name, assessed_value, annual_taxes,
+                               last_sale_price, last_sale_date
+    Any field that cannot be parsed is left as None.
+    """
+    url = f"https://cp.spokanecounty.org/scout/propertyinformation/Summary.aspx?PID={apn}"
+    result = {
+        "owner_name": None,
+        "assessed_value": None,
+        "annual_taxes": None,
+        "last_sale_price": None,
+        "last_sale_date": None,
+    }
+    try:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
+        resp = await asyncio.to_thread(requests.get, url, headers=headers, timeout=15)
+        if resp.status_code != 200:
+            logger.warning(f"SCOUT returned HTTP {resp.status_code} for APN {apn}")
+            return result
+
+        soup = BeautifulSoup(resp.text, "html.parser")
+        text = soup.get_text(" ", strip=True)
+
+        # ── Owner Name ─────────────────────────────────────────────────────────
+        # SCOUT renders owner in a <td> after a label containing "Owner"
+        for row in soup.find_all("tr"):
+            cells = row.find_all("td")
+            for i, cell in enumerate(cells):
+                label = cell.get_text(strip=True).lower()
+                if "owner" in label and i + 1 < len(cells):
+                    val = cells[i + 1].get_text(strip=True)
+                    if val and len(val) > 2:
+                        result["owner_name"] = val
+                        break
+            if result["owner_name"]:
+                break
+
+        # ── Assessed / Market Value ────────────────────────────────────────────
+        # Look for "Total Assessed" or "Assessed Value" followed by a dollar amount
+        m = re.search(
+            r'(?:Total Assessed|Assessed Value|Market Value)[^\$]*\$\s*([\d,]+)',
+            text, re.IGNORECASE
+        )
+        if m:
+            result["assessed_value"] = int(m.group(1).replace(",", ""))
+
+        # Fallback: any labelled row in tables
+        if not result["assessed_value"]:
+            for row in soup.find_all("tr"):
+                cells = row.find_all("td")
+                for i, cell in enumerate(cells):
+                    label = cell.get_text(strip=True).lower()
+                    if ("assessed" in label or "market value" in label) and i + 1 < len(cells):
+                        val = cells[i + 1].get_text(strip=True).replace("$", "").replace(",", "").strip()
+                        if val.isdigit():
+                            result["assessed_value"] = int(val)
+                            break
+                if result["assessed_value"]:
+                    break
+
+        # ── Annual Property Taxes ──────────────────────────────────────────────
+        m = re.search(
+            r'(?:Annual Tax|Property Tax|Taxes?\s+Due|Current Year Tax)[^\$]*\$\s*([\d,]+)',
+            text, re.IGNORECASE
+        )
+        if m:
+            result["annual_taxes"] = int(m.group(1).replace(",", ""))
+
+        # ── Last Sale Price ────────────────────────────────────────────────────
+        m = re.search(
+            r'(?:Last Sale|Sale Price|Transfer Amount|Sales Price)[^\$\d]*\$?\s*([\d,]+)',
+            text, re.IGNORECASE
+        )
+        if m:
+            raw = m.group(1).replace(",", "")
+            if raw.isdigit() and int(raw) > 1000:
+                result["last_sale_price"] = int(raw)
+
+        # ── Last Sale Date ─────────────────────────────────────────────────────
+        m = re.search(
+            r'(?:Last Sale Date|Sale Date|Transfer Date)[^\d]*(\d{1,2}/\d{1,2}/\d{4}|\d{4}-\d{2}-\d{2})',
+            text, re.IGNORECASE
+        )
+        if m:
+            result["last_sale_date"] = m.group(1)
+
+        logger.info(f"SCOUT fetch OK for APN {apn}: {result}")
+    except Exception as e:
+        logger.warning(f"SCOUT fetch error for APN {apn}: {e}")
+
+    return result
+
+
 async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict=None):
     """
     Given a list of Property ORM objects missing image or estimate data,
@@ -152,8 +252,9 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
         needs_image = not prop.image_url
         needs_estimate = not prop.estimated_value or not prop.bedrooms or not prop.bathrooms or not prop.square_feet or not prop.year_built or not prop.property_type or not prop.lot_size
         needs_apn = not prop.apn
-        
-        if not needs_image and not needs_estimate and not needs_apn:
+        needs_scout = prop.apn and not prop.scout_fetched_at
+
+        if not needs_image and not needs_estimate and not needs_apn and not needs_scout:
             continue
 
         data = await _fetch_property_data(prop.address, prop.city, fetch_estimate=needs_estimate, fetch_image=needs_image, fetch_apn=needs_apn, zillow_url=prop.zillow_url)
@@ -194,7 +295,27 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
         if data.get("apn") and not prop.apn:
             prop.apn = data["apn"]
             changed = True
-            
+
+        # ── Spokane County SCOUT data ──────────────────────────────────────────
+        # Fetch on first enrichment pass once we have an APN (either existing or just discovered above)
+        effective_apn = prop.apn or data.get("apn")
+        if effective_apn and not prop.scout_fetched_at:
+            scout = await fetch_scout_data(effective_apn)
+            from datetime import datetime as dt
+            prop.scout_fetched_at = dt.utcnow()
+            if scout.get("owner_name"):
+                prop.owner_name = scout["owner_name"]
+            if scout.get("assessed_value"):
+                prop.assessed_value = scout["assessed_value"]
+            if scout.get("annual_taxes"):
+                prop.annual_taxes = scout["annual_taxes"]
+            if scout.get("last_sale_price"):
+                prop.last_sale_price = scout["last_sale_price"]
+            if scout.get("last_sale_date"):
+                prop.last_sale_date = scout["last_sale_date"]
+            changed = True
+            await asyncio.sleep(1)   # be polite to the county server
+
         # Always set a fallback URL so we don't endlessly re-queue properties that Google/DDG cannot find
         if not prop.zillow_url:
             zillow_query = f"{prop.address}-{prop.city}-WA".replace(" ", "-").replace(",", "")
