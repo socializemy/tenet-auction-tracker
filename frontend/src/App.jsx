@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchProperties, triggerScrape, fetchScrapeStatus, exportCsv } from './utils/api';
-import { Search } from 'lucide-react';
+import { Search, PanelLeft, List, LayoutGrid } from 'lucide-react';
 import PropertyList from './components/PropertyList';
+import PropertyCard from './components/PropertyCard';
+import PropertyListView from './components/PropertyListView';
 import PropertyMap from './components/PropertyMap';
 import PropertyModal from './components/PropertyModal';
 
@@ -13,9 +15,18 @@ function App() {
   const [scrapeMsg, setScrapeMsg] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
 
+  // View mode: 'split' (default) | 'list' | 'grid'
+  const [viewMode, setViewMode] = useState('split');
+
   const [filters, setFilters] = useState({
     county: '',
     sort_by: 'auction_date',
+  });
+
+  // Extra filters shown in List view
+  const [listFilters, setListFilters] = useState({
+    status: '',
+    minBeds: '',
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,19 +56,16 @@ function App() {
     }).catch(e => console.error(e));
   }, []);
 
-  // Poll scrape status continuously to sync across tabs/refreshes and dynamically load enriched properties
+  // Poll scrape status to sync across tabs/refreshes and dynamically load enriched properties
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
         const status = await fetchScrapeStatus();
-
-        // If it's running, dynamically pull new properties so the user sees real-time Zillow images loading
         if (status.running) {
           loadProperties(true);
           setProgressPercent(status.progress_percent || 0);
           setScrapeMsg(status.status_text || 'Scraping in progress...');
         }
-
         if (status.running && !scraping) {
           setScraping(true);
         } else if (!status.running && scraping) {
@@ -65,10 +73,7 @@ function App() {
           setProgressPercent(100);
           setScrapeMsg(`Done! ${status.total_scraped ?? 0} properties loaded.`);
           loadProperties(true);
-          setTimeout(() => {
-            setScrapeMsg('');
-            setProgressPercent(0);
-          }, 6000);
+          setTimeout(() => { setScrapeMsg(''); setProgressPercent(0); }, 6000);
         }
       } catch (e) { /* ignore */ }
     }, 4000);
@@ -93,44 +98,58 @@ function App() {
     setFilters(f => ({ ...f, [key]: value }));
   };
 
+  // Text search filter
   const filteredProperties = useMemo(() => {
     if (!searchTerm.trim()) return properties;
-
     const lowerTerm = searchTerm.toLowerCase().trim();
-    return properties.filter(p => {
-      const matchAddress = p.address?.toLowerCase().includes(lowerTerm);
-      const matchCity = p.city?.toLowerCase().includes(lowerTerm);
-      const matchZip = p.zip_code?.toLowerCase().includes(lowerTerm);
-      const matchTsn = p.tsn?.toLowerCase().includes(lowerTerm);
-      return matchAddress || matchCity || matchZip || matchTsn;
-    });
+    return properties.filter(p =>
+      p.address?.toLowerCase().includes(lowerTerm) ||
+      p.city?.toLowerCase().includes(lowerTerm) ||
+      p.zip_code?.toLowerCase().includes(lowerTerm) ||
+      p.tsn?.toLowerCase().includes(lowerTerm)
+    );
   }, [properties, searchTerm]);
+
+  // Additional list-view filters (applied in all views once set, but controls only show in list view)
+  const displayedProperties = useMemo(() => {
+    let result = filteredProperties;
+    if (listFilters.status) {
+      result = result.filter(p => {
+        const s = (p.status || '').toLowerCase();
+        if (listFilters.status === 'active') return !s.includes('postpone') && !s.includes('cancel');
+        if (listFilters.status === 'postponed') return s.includes('postpone');
+        if (listFilters.status === 'canceled') return s.includes('cancel');
+        return true;
+      });
+    }
+    if (listFilters.minBeds) {
+      result = result.filter(p => (p.bedrooms || 0) >= parseInt(listFilters.minBeds));
+    }
+    return result;
+  }, [filteredProperties, listFilters]);
+
+  const VIEW_TABS = [
+    { id: 'split', label: 'Split',  Icon: PanelLeft,   title: 'Split view — cards + map' },
+    { id: 'list',  label: 'List',   Icon: List,         title: 'List view — sortable table' },
+    { id: 'grid',  label: 'Grid',   Icon: LayoutGrid,   title: 'Grid view — 3-column cards' },
+  ];
 
   return (
     <div className="app-container-split">
       {selectedProp && (
-        <PropertyModal
-          property={selectedProp}
-          onClose={() => setSelectedProp(null)}
-        />
+        <PropertyModal property={selectedProp} onClose={() => setSelectedProp(null)} />
       )}
 
+      {/* ── Header ── */}
       <header className="header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', zIndex: 100 }}>
         <div className="header-logo">
-          <div style={{
-            width: '36px', height: '36px',
-            background: 'var(--accent-primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
+          <div style={{ width: '36px', height: '36px', background: 'var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="square" strokeLinejoin="miter">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
               <polyline points="9 22 9 12 15 12 15 22" />
             </svg>
           </div>
-          <span>
-            TENET <span className="text-gradient">AUCTION </span>TRACKER
-          </span>
+          <span>TENET <span className="text-gradient">AUCTION </span>TRACKER</span>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '60%' }}>
           <a href="https://search.nationwideposting.com/SearchTerms.aspx" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--font-body)' }}>Nationwide Posting ↗</a>
@@ -146,78 +165,174 @@ function App() {
         </div>
       </header>
 
-      <main className="split-view-container">
-        <div className="list-pane">
-          <div className="filter-bar">
-            <div className="omnibar-container">
-              <Search className="omnibar-icon" size={18} />
-              <input
-                type="text"
-                className="omnibar-input"
-                placeholder="Search by Address, City, Zip, or Asset ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <select value={filters.sort_by} onChange={e => handleFilterChange('sort_by', e.target.value)} style={{ marginLeft: 'auto' }}>
-              <option value="auction_date">Sort: Date</option>
-              <option value="starting_bid">Sort: Lowest Bid</option>
-              <option value="estimated_value">Sort: Highest Value</option>
-            </select>
-            <button
-              className="btn"
-              onClick={handleRefresh}
-              disabled={scraping}
-              style={{
-                background: scraping ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
-                color: scraping ? 'var(--text-secondary)' : 'var(--text-primary)',
-                border: '1px solid var(--border-color)',
-                padding: '0.5rem 1rem',
-                fontSize: '0.85rem',
-              }}
-            >
-              {scraping ? '⟳ Scraping...' : '↺ Refresh Data'}
-            </button>
-          </div>
+      {/* ── Global Filter Bar ── */}
+      <div className="filter-bar">
 
-          {scrapeMsg && (
-            <div style={{
-              padding: '0.6rem 1.5rem',
-              background: scraping ? 'rgba(37, 99, 235, 0.06)' : 'rgba(5, 150, 105, 0.06)',
-              borderBottom: '1px solid var(--border-color)',
-              fontSize: '0.8rem',
-              color: scraping ? '#2563EB' : '#059669',
-              fontWeight: 500,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.5rem'
-            }}>
-              <div>{scrapeMsg}</div>
-              {scraping && (
-                <div style={{ width: '100%', height: '4px', background: 'rgba(37, 99, 235, 0.2)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ width: `${progressPercent}%`, height: '100%', background: '#2563EB', transition: 'width 0.5s ease-in-out' }} />
-                </div>
-              )}
+        {/* Search */}
+        <div className="omnibar-container">
+          <Search className="omnibar-icon" size={18} />
+          <input
+            type="text"
+            className="omnibar-input"
+            placeholder="Search by Address, City, Zip, or Asset ID..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        {/* Sort */}
+        <select value={filters.sort_by} onChange={e => handleFilterChange('sort_by', e.target.value)}>
+          <option value="auction_date">Sort: Date</option>
+          <option value="starting_bid">Sort: Lowest Bid</option>
+          <option value="estimated_value">Sort: Highest Value</option>
+        </select>
+
+        {/* List-view extra filters */}
+        {viewMode === 'list' && (
+          <>
+            <select
+              value={listFilters.status}
+              onChange={e => setListFilters(f => ({ ...f, status: e.target.value }))}
+              title="Filter by status"
+            >
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="postponed">Postponed</option>
+              <option value="canceled">Canceled</option>
+            </select>
+            <select
+              value={listFilters.minBeds}
+              onChange={e => setListFilters(f => ({ ...f, minBeds: e.target.value }))}
+              title="Minimum bedrooms"
+            >
+              <option value="">Any Beds</option>
+              <option value="1">1+ Bed</option>
+              <option value="2">2+ Beds</option>
+              <option value="3">3+ Beds</option>
+              <option value="4">4+ Beds</option>
+            </select>
+          </>
+        )}
+
+        {/* Spacer */}
+        <div style={{ flex: 1, minWidth: '0.5rem' }} />
+
+        {/* View mode tabs */}
+        <div className="view-tabs">
+          {VIEW_TABS.map(({ id, label, Icon, title }) => (
+            <button
+              key={id}
+              title={title}
+              className={`view-tab-btn${viewMode === id ? ' active' : ''}`}
+              onClick={() => setViewMode(id)}
+            >
+              <Icon size={14} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Refresh */}
+        <button
+          className="btn"
+          onClick={handleRefresh}
+          disabled={scraping}
+          style={{
+            background: scraping ? 'var(--bg-tertiary)' : 'var(--bg-primary)',
+            color: scraping ? 'var(--text-secondary)' : 'var(--text-primary)',
+            border: '1px solid var(--border-color)',
+            padding: '0.5rem 1rem',
+            fontSize: '0.85rem',
+          }}
+        >
+          {scraping ? '⟳ Scraping...' : '↺ Refresh Data'}
+        </button>
+      </div>
+
+      {/* ── Scrape Progress Banner ── */}
+      {scrapeMsg && (
+        <div style={{
+          padding: '0.6rem 1.5rem',
+          background: scraping ? 'rgba(37, 99, 235, 0.06)' : 'rgba(5, 150, 105, 0.06)',
+          borderBottom: '1px solid var(--border-color)',
+          fontSize: '0.8rem',
+          color: scraping ? '#2563EB' : '#059669',
+          fontWeight: 500,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          flexShrink: 0,
+        }}>
+          <div>{scrapeMsg}</div>
+          {scraping && (
+            <div style={{ width: '100%', height: '4px', background: 'rgba(37, 99, 235, 0.2)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: `${progressPercent}%`, height: '100%', background: '#2563EB', transition: 'width 0.5s ease-in-out' }} />
             </div>
           )}
+        </div>
+      )}
 
-          <PropertyList
-            properties={filteredProperties}
+      {/* ── Main Content Area ── */}
+
+      {/* SPLIT VIEW (default) */}
+      {viewMode === 'split' && (
+        <div className="split-view-container">
+          <div className="list-pane">
+            <PropertyList
+              properties={displayedProperties}
+              loading={loading}
+              selectedProperty={selectedProp}
+              onPropertySelect={setSelectedProp}
+            />
+          </div>
+          <div className="map-pane">
+            <PropertyMap
+              properties={displayedProperties}
+              selectedProperty={selectedProp}
+              onPropertySelect={setSelectedProp}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* LIST VIEW */}
+      {viewMode === 'list' && (
+        <div className="full-view-container">
+          <PropertyListView
+            properties={displayedProperties}
             loading={loading}
-            selectedProperty={selectedProp}
             onPropertySelect={setSelectedProp}
           />
         </div>
+      )}
 
-        <div className="map-pane">
-          {/* The map stays alive even during loading to prevent jank */}
-          <PropertyMap
-            properties={filteredProperties}
-            selectedProperty={selectedProp}
-            onPropertySelect={setSelectedProp}
-          />
+      {/* GRID VIEW */}
+      {viewMode === 'grid' && (
+        <div className="full-view-container">
+          {loading ? (
+            <div className="list-loader"><div className="spinner" /><p>Loading properties…</p></div>
+          ) : displayedProperties.length === 0 ? (
+            <div className="list-empty"><p>No properties found matching your criteria.</p></div>
+          ) : (
+            <div className="property-list-scroller">
+              <div className="list-header-info">
+                <span>{displayedProperties.length} properties</span>
+                <span className="text-muted">Grid view</span>
+              </div>
+              <div className="cards-grid-3col">
+                {displayedProperties.map(prop => (
+                  <PropertyCard
+                    key={prop.id}
+                    property={prop}
+                    onClick={() => setSelectedProp(prop)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+      )}
+
     </div>
   );
 }
