@@ -41,27 +41,41 @@ except ImportError:
     _CFFI_AVAILABLE = False
 
 
-def _http_get(url: str, headers: dict = None, timeout: int = 12):
-    """GET with curl_cffi (Chrome TLS impersonation) falling back to plain requests."""
+_SCRAPER_API_KEY = os.environ.get("SCRAPERAPI_KEY", "")
+_SCRAPER_API_BASE = "https://api.scraperapi.com/"
+
+
+def _scraper_get(url: str, render_js: bool = False, timeout: int = 60) -> requests.Response:
+    """
+    Route a GET through ScraperAPI (residential proxy + bot bypass).
+    Falls back to curl_cffi then plain requests if no API key is configured.
+    render_js=True executes JavaScript — needed for PerimeterX-protected sites.
+    """
+    key = os.environ.get("SCRAPERAPI_KEY", _SCRAPER_API_KEY)
+    if key:
+        params = {"api_key": key, "url": url}
+        if render_js:
+            params["render"] = "true"
+        return requests.get(_SCRAPER_API_BASE, params=params, timeout=timeout)
     if _CFFI_AVAILABLE:
         return cffi_requests.get(url, impersonate="chrome124", timeout=timeout)
-    return requests.get(url, headers=headers or _BROWSER_HEADERS, timeout=timeout)
+    return requests.get(url, headers=_BROWSER_HEADERS, timeout=timeout)
 
 
 def _fetch_zillow_photo(zillow_url: str, address: str, city: str, state: str = "WA") -> Optional[str]:
     """
-    Fetch og:image from a Zillow listing page using Chrome TLS impersonation,
-    cache it locally, return the /api/streetview/... URL on success.
+    Fetch a listing photo from Zillow via ScraperAPI (handles PerimeterX).
+    Tries og:image then zillowstatic CDN URLs embedded in the page source.
+    Caches the image locally and returns the /api/streetview/... URL.
     """
     if not zillow_url:
         return None
     try:
-        resp = _http_get(zillow_url)
+        resp = _scraper_get(zillow_url, render_js=True)
         if resp.status_code != 200:
             logger.debug(f"Zillow HTTP {resp.status_code} for '{address}'")
             return None
         soup = BeautifulSoup(resp.text, "html.parser")
-        # Try og:image first, then zillowstatic CDN URLs embedded in the page
         og = soup.find("meta", property="og:image")
         img_url = og.get("content", "") if og else ""
         if not img_url:
@@ -80,48 +94,41 @@ def _fetch_zillow_photo(zillow_url: str, address: str, city: str, state: str = "
 
 def _fetch_realtor_photo(address: str, city: str, state: str = "WA") -> Optional[str]:
     """
-    Search DuckDuckGo for a Realtor.com listing, fetch its og:image,
-    cache it locally, return the /api/streetview/... URL on success.
+    Search Bing for a Realtor.com listing URL, fetch the page via ScraperAPI,
+    extract og:image or rdcpix CDN photo, cache and return the local URL.
     """
-    query = f'"{address}" {city} {state} site:realtor.com'.replace(" ", "+")
-    ddg_url = f"https://html.duckduckgo.com/html/?q={query}"
+    # Use Bing (not DDG — DDG blocks VPS IPs) to find the realtor.com listing
+    query = f"{address} {city} {state} site:realtor.com".replace(" ", "+")
+    bing_url = f"https://www.bing.com/search?q={query}"
     try:
-        req = requests.get(
-            ddg_url,
-            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"},
-            timeout=10,
-        )
-        soup = BeautifulSoup(req.text, "html.parser")
-        for res in soup.find_all("div", class_="result"):
-            url_el = res.find("a", class_="result__url")
-            if not url_el:
-                continue
-            display = url_el.get_text(strip=True)
-            if "realtor.com" not in display:
-                continue
-            # Reconstruct full URL from the display text
-            if not display.startswith("http"):
-                display = "https://" + display.lstrip("/")
-            try:
-                page_resp = _http_get(display)
-                if page_resp.status_code != 200:
-                    continue
-                pg_soup = BeautifulSoup(page_resp.text, "html.parser")
-                og = pg_soup.find("meta", property="og:image")
-                img_url = og.get("content", "") if og else ""
-                # Also try rdcpix CDN URLs embedded in the page
-                if not img_url:
-                    matches = re.findall(
-                        r'https://ap\.rdcpix\.com/[^"\'<>\s]+\.(?:jpg|jpeg|png|webp)',
-                        page_resp.text
-                    )
-                    img_url = matches[0] if matches else ""
-                if img_url and img_url.startswith("http"):
-                    local = image_cache.download_and_cache(img_url, "realtor", address, city, state)
-                    if local:
-                        return local
-            except Exception:
-                continue
+        search_resp = _scraper_get(bing_url)
+        if search_resp.status_code != 200:
+            logger.debug(f"Bing search HTTP {search_resp.status_code} for '{address}'")
+            return None
+        soup = BeautifulSoup(search_resp.text, "html.parser")
+        listing_url = None
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            if "realtor.com/realestateandhomes-detail" in href or "realtor.com/homedetails" in href:
+                listing_url = href.split("&")[0]  # strip Bing tracking params
+                break
+        if not listing_url:
+            logger.debug(f"No Realtor.com listing found for '{address}'")
+            return None
+        page_resp = _scraper_get(listing_url)
+        if page_resp.status_code != 200:
+            return None
+        pg_soup = BeautifulSoup(page_resp.text, "html.parser")
+        og = pg_soup.find("meta", property="og:image")
+        img_url = og.get("content", "") if og else ""
+        if not img_url:
+            matches = re.findall(
+                r'https://ap\.rdcpix\.com/[^"\'<>\s]+\.(?:jpg|jpeg|png|webp)',
+                page_resp.text
+            )
+            img_url = matches[0] if matches else ""
+        if img_url and img_url.startswith("http"):
+            return image_cache.download_and_cache(img_url, "realtor", address, city, state)
     except Exception as e:
         logger.debug(f"Realtor.com photo fetch failed for '{address}': {e}")
     return None

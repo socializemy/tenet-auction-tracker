@@ -9,6 +9,7 @@ services:
       - CHROME_BIN_PATH=/usr/bin/google-chrome
       - DATABASE_URL=sqlite:////app/data/auction_data.db
       - GOOGLE_STREET_VIEW_API_KEY=${GOOGLE_STREET_VIEW_API_KEY}
+      - SCRAPERAPI_KEY=${SCRAPERAPI_KEY}
     volumes:
       # Mount the manual data ingest & database folder for offline parsing / safe sqlite states
       - ./backend/data:/app/data
