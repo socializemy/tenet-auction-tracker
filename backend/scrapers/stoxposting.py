@@ -1,76 +1,125 @@
-from typing import List, Dict, Any
-from scrapers.base import BaseScraper
-import logging
 import re
+import logging
+from typing import List, Dict, Any
+
+import httpx
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-class StoxPostingScraper(BaseScraper):
-    def __init__(self):
-        super().__init__(
-            source_name="Stox Posting",
-            base_url="https://www.stoxposting.com/"
-        )
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
-    async def _extract_data(self, page) -> List[Dict[str, Any]]:
+BASE_URL = "https://www.stoxposting.com/"
+SOURCE_NAME = "Stox Posting"
+
+
+class StoxPostingScraper:
+    def __init__(self):
+        self.source_name = SOURCE_NAME
+        self.base_url = BASE_URL
+
+    async def scrape(self) -> List[Dict[str, Any]]:
+        logger.info(f"Starting HTTP scrape for {self.source_name}")
         properties = []
 
-        logger.info(f"Navigating to {self.base_url}")
-        await page.goto(self.base_url, wait_until="networkidle", timeout=30000)
-        await page.wait_for_timeout(2000)
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=30,
+            verify=False,
+            headers=HEADERS,
+        ) as client:
+            try:
+                resp = await client.get(self.base_url)
+                resp.raise_for_status()
+                html = resp.text
+                soup = BeautifulSoup(html, "html.parser")
+            except Exception as e:
+                logger.error(f"Stox Posting: initial GET failed: {e}")
+                return properties
 
-        # Try to navigate to Washington listings
-        try:
-            wa_link = page.locator('a:has-text("Washington"), a[href*="WA"], a[href*="washington"]')
-            if await wa_link.count() > 0:
-                await wa_link.first.click()
-                await page.wait_for_load_state("networkidle", timeout=10000)
-        except Exception:
-            pass
+            # Follow Washington link if present
+            wa_link = soup.find(
+                "a",
+                string=re.compile(r"washington", re.I),
+            ) or soup.find("a", href=re.compile(r"WA|washington", re.I))
 
-        # Then Spokane
-        try:
-            spokane_link = page.locator('a:has-text("Spokane")')
-            if await spokane_link.count() > 0:
-                await spokane_link.first.click()
-                await page.wait_for_load_state("networkidle", timeout=10000)
-        except Exception:
-            pass
+            if wa_link and wa_link.get("href"):
+                href = wa_link["href"]
+                wa_url = href if href.startswith("http") else f"https://www.stoxposting.com/{href.lstrip('/')}"
+                try:
+                    resp = await client.get(wa_url)
+                    resp.raise_for_status()
+                    html = resp.text
+                    soup = BeautifulSoup(html, "html.parser")
+                    logger.info(f"Stox: followed WA link to {wa_url}")
+                except Exception as e:
+                    logger.warning(f"Stox: WA link follow failed: {e}")
 
-        rows = await page.query_selector_all('table tr, .listing-row, .notice-row, li.property')
-        logger.info(f"Stox Posting: found {len(rows)} rows")
+            # Follow Spokane link if present
+            spokane_link = soup.find("a", string=re.compile(r"spokane", re.I))
+            if spokane_link and spokane_link.get("href"):
+                href = spokane_link["href"]
+                spokane_url = href if href.startswith("http") else f"https://www.stoxposting.com/{href.lstrip('/')}"
+                try:
+                    resp = await client.get(spokane_url)
+                    resp.raise_for_status()
+                    html = resp.text
+                    soup = BeautifulSoup(html, "html.parser")
+                    logger.info(f"Stox: followed Spokane link to {spokane_url}")
+                except Exception as e:
+                    logger.warning(f"Stox: Spokane link follow failed: {e}")
+
+        rows = soup.find_all("tr")
+        if not rows:
+            rows = soup.find_all(class_=re.compile(r"listing|notice|property|row", re.I))
+
+        logger.info(f"Stox Posting: found {len(rows)} raw rows")
 
         for row in rows:
             try:
-                row_text = await row.inner_text()
-                if "Spokane" not in row_text:
+                row_text = row.get_text(" ", strip=True)
+                if "spokane" not in row_text.lower():
                     continue
 
-                cells = await row.query_selector_all('td')
+                cells = row.find_all("td")
                 if not cells:
                     continue
-                texts = [(await c.inner_text()).strip() for c in cells]
 
-                tsn, address, sale_date = "", "", ""
+                texts = [c.get_text(strip=True) for c in cells]
+
+                tsn = ""
+                address = ""
+                sale_date = ""
+
                 for t in texts:
-                    if re.match(r'\d{2}/\d{2}/\d{4}', t) and not sale_date:
+                    if re.match(r"\d{2}/\d{2}/\d{4}", t) and not sale_date:
                         sale_date = t
-                    elif re.match(r'\d+\s+\w+', t) and not address:
+                    elif re.match(r"\d+\s+\w+", t) and not address:
                         address = t
-                    elif re.match(r'WA-\d+|\d{4}-\d+', t) and not tsn:
+                    elif re.match(r"WA-\d+|\d{4}-\d+", t) and not tsn:
                         tsn = t
 
                 if not address:
-                    address = next((t for t in texts if re.search(r'\d+\s+\w+\s+(st|ave|rd|dr|blvd|way|ln|ct|pl)', t, re.I)), "")
+                    address = next(
+                        (t for t in texts if re.search(r"\d+\s+\w+\s+(st|ave|rd|dr|blvd|way|ln|ct|pl)", t, re.I)),
+                        "",
+                    )
 
                 city = "Spokane Valley" if "Spokane Valley" in row_text else "Spokane"
 
-                link = await row.query_selector('a')
+                link = row.find("a")
                 source_url = ""
-                if link:
-                    href = await link.get_attribute('href')
-                    if href:
-                        source_url = href if href.startswith('http') else f"https://www.stoxposting.com/{href.lstrip('/')}"
+                if link and link.get("href"):
+                    href = link["href"]
+                    source_url = href if href.startswith("http") else f"https://www.stoxposting.com/{href.lstrip('/')}"
 
                 if address:
                     properties.append({
@@ -84,7 +133,7 @@ class StoxPostingScraper(BaseScraper):
                         "auction_time": "10:00 AM",
                         "starting_bid": 0.0,
                         "status": "Active",
-                        "source_url": source_url,
+                        "source_url": source_url or self.base_url,
                     })
             except Exception as e:
                 logger.warning(f"Stox Posting row error: {e}")

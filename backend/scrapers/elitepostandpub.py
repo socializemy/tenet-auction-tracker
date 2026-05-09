@@ -1,47 +1,82 @@
-from typing import List, Dict, Any
-from scrapers.base import BaseScraper
-import logging
 import re
+import logging
+from typing import List, Dict, Any
+
+import httpx
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-class ElitePostScraper(BaseScraper):
-    def __init__(self):
-        super().__init__(
-            source_name="Elite Post & Pub",
-            base_url="https://elitepostandpub.com/index.php"
-        )
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
-    async def _extract_data(self, page) -> List[Dict[str, Any]]:
+BASE_URL = "https://elitepostandpub.com/index.php"
+SOURCE_NAME = "Elite Post & Pub"
+
+
+class ElitePostScraper:
+    def __init__(self):
+        self.source_name = SOURCE_NAME
+        self.base_url = BASE_URL
+
+    async def scrape(self) -> List[Dict[str, Any]]:
+        logger.info(f"Starting HTTP scrape for {self.source_name}")
         properties = []
 
-        logger.info(f"Navigating to {self.base_url}")
-        await page.goto(self.base_url, wait_until="networkidle", timeout=30000)
-        await page.wait_for_timeout(2000)
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=30,
+            verify=False,
+            headers=HEADERS,
+        ) as client:
+            # Try WA-filtered URL first (common PHP query param pattern)
+            urls_to_try = [
+                f"{self.base_url}?state=WA",
+                f"{self.base_url}?State=WA",
+                self.base_url,
+            ]
 
-        # Try to click/filter for Washington or Spokane if options are present
-        try:
-            state_select = page.locator('select[name*="state"], select[name*="State"]')
-            if await state_select.count() > 0:
-                await state_select.select_option(value="WA", timeout=3000)
-                await page.wait_for_timeout(1500)
-        except Exception:
-            pass
+            html = None
+            for url in urls_to_try:
+                try:
+                    resp = await client.get(url)
+                    resp.raise_for_status()
+                    if "spokane" in resp.text.lower() or "washington" in resp.text.lower():
+                        html = resp.text
+                        logger.info(f"Elite Post: got content from {url}")
+                        break
+                except Exception as e:
+                    logger.warning(f"Elite Post: GET {url} failed: {e}")
 
-        rows = await page.query_selector_all('table tr, .notice-row, .listing-row')
-        logger.info(f"Elite Post: found {len(rows)} rows")
+            if not html:
+                logger.error("Elite Post: could not retrieve any useful page")
+                return properties
+
+        soup = BeautifulSoup(html, "html.parser")
+        rows = soup.find_all(["tr", "li"], class_=re.compile(r"notice|listing|property|row", re.I))
+        if not rows:
+            rows = soup.find_all("tr")
+
+        logger.info(f"Elite Post: found {len(rows)} raw rows")
 
         for row in rows:
             try:
-                row_text = await row.inner_text()
-                if "Spokane" not in row_text and "spokane" not in row_text.lower():
+                row_text = row.get_text(" ", strip=True)
+                if "spokane" not in row_text.lower():
                     continue
 
-                cells = await row.query_selector_all('td')
+                cells = row.find_all("td")
                 if len(cells) < 2:
                     continue
 
-                texts = [(await c.inner_text()).strip() for c in cells]
+                texts = [c.get_text(strip=True) for c in cells]
 
                 tsn = ""
                 address = ""
@@ -49,24 +84,26 @@ class ElitePostScraper(BaseScraper):
                 status = "Active"
 
                 for t in texts:
-                    if re.match(r'\d{2}/\d{2}/\d{4}', t) and not sale_date:
+                    if re.match(r"\d{2}/\d{2}/\d{4}", t) and not sale_date:
                         sale_date = t
-                    elif re.match(r'\d+\s+\w+', t) and not address:
+                    elif re.match(r"\d+\s+\w+", t) and not address:
                         address = t
-                    elif re.match(r'WA-\d+|\d{4}-\d+', t) and not tsn:
+                    elif re.match(r"WA-\d+|\d{4}-\d+", t) and not tsn:
                         tsn = t
 
                 if not address and texts:
-                    address = next((t for t in texts if re.search(r'\d+\s+\w+\s+(st|ave|rd|dr|blvd|way|ln|ct|pl)', t, re.I)), texts[0] if texts else "")
+                    address = next(
+                        (t for t in texts if re.search(r"\d+\s+\w+\s+(st|ave|rd|dr|blvd|way|ln|ct|pl)", t, re.I)),
+                        texts[0] if texts else "",
+                    )
 
                 city = "Spokane Valley" if "Spokane Valley" in row_text else "Spokane"
 
-                link = await row.query_selector('a')
+                link = row.find("a")
                 source_url = ""
-                if link:
-                    href = await link.get_attribute('href')
-                    if href:
-                        source_url = href if href.startswith('http') else f"https://elitepostandpub.com/{href.lstrip('/')}"
+                if link and link.get("href"):
+                    href = link["href"]
+                    source_url = href if href.startswith("http") else f"https://elitepostandpub.com/{href.lstrip('/')}"
 
                 if address:
                     properties.append({
@@ -80,7 +117,7 @@ class ElitePostScraper(BaseScraper):
                         "auction_time": "10:00 AM",
                         "starting_bid": 0.0,
                         "status": status,
-                        "source_url": source_url,
+                        "source_url": source_url or self.base_url,
                     })
             except Exception as e:
                 logger.warning(f"Elite Post row error: {e}")

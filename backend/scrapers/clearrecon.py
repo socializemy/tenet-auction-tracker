@@ -1,102 +1,121 @@
-from typing import List, Dict, Any
-from scrapers.base import BaseScraper
+import re
 import logging
+from typing import List, Dict, Any
+
+import httpx
+from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-class ClearReconScraper(BaseScraper):
-    def __init__(self):
-        super().__init__(
-            source_name="Clear Recon WA",
-            base_url="https://clearrecon-wa.com/washington-listings/"
-        )
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
-    async def _extract_data(self, page) -> List[Dict[str, Any]]:
+BASE_URL = "https://clearrecon-wa.com/washington-listings/"
+SOURCE_NAME = "Clear Recon WA"
+
+
+class ClearReconScraper:
+    def __init__(self):
+        self.source_name = SOURCE_NAME
+        self.base_url = BASE_URL
+
+    async def scrape(self) -> List[Dict[str, Any]]:
+        logger.info(f"Starting HTTP scrape for {self.source_name}")
         properties = []
 
-        logger.info(f"Navigating to {self.base_url}")
-        await page.goto(self.base_url, wait_until="networkidle", timeout=30000)
-        await page.wait_for_timeout(2000)
+        async with httpx.AsyncClient(
+            follow_redirects=True,
+            timeout=30,
+            verify=False,
+            headers=HEADERS,
+        ) as client:
+            # Step 1: hit the page — if there is a disclaimer cookie it is set
+            # on the GET response; following the redirect chain handles it.
+            try:
+                resp = await client.get(self.base_url)
+                resp.raise_for_status()
+            except Exception as e:
+                logger.error(f"ClearRecon: initial GET failed: {e}")
+                return properties
 
-        # Handle disclaimer
-        try:
-            agree_btn = page.locator('a:has-text("Agree")')
-            if await agree_btn.count() > 0:
-                logger.info("Found Agree button, clicking...")
-                await agree_btn.first.click()
-                await page.wait_for_load_state("networkidle")
-                await page.wait_for_timeout(3000)
-        except Exception as e:
-            logger.info(f"Agree button not found or error clicking: {e}")
+            html = resp.text
 
-        # Try to select "All" from the DataTables dropdown
-        try:
-            logger.info("Setting entries per page to All...")
-            await page.evaluate('''() => {
-                const select = document.querySelector('select[name$="_length"]');
-                if (select) {
-                    select.value = '-1';
-                    select.dispatchEvent(new Event('change'));
-                }
-            }''')
-            # Wait for datatable to reload
-            await page.wait_for_timeout(3000)
-        except Exception as e:
-            logger.warning(f"Could not change entries to All: {e}")
+            # If a disclaimer/agree wall is present, click through it by
+            # submitting the agree link as a GET with the same session.
+            if "agree" in html.lower() and "posts-data-table" not in html.lower():
+                logger.info("ClearRecon: disclaimer detected, accepting...")
+                soup_wall = BeautifulSoup(html, "html.parser")
+                agree_link = soup_wall.find("a", string=re.compile(r"agree", re.I))
+                if agree_link and agree_link.get("href"):
+                    href = agree_link["href"]
+                    agree_url = href if href.startswith("http") else f"https://clearrecon-wa.com{href}"
+                    try:
+                        resp = await client.get(agree_url)
+                        resp.raise_for_status()
+                        html = resp.text
+                    except Exception as e:
+                        logger.warning(f"ClearRecon: agree click failed: {e}")
 
-        logger.info("Parsing property rows...")
-        rows = await page.query_selector_all('table.posts-data-table > tbody > tr')
-        
-        if not rows:
-            logger.warning("No result rows found on Clear Recon WA")
+        soup = BeautifulSoup(html, "html.parser")
+
+        # DataTables renders ALL rows in the initial HTML (client-side mode).
+        # The visible "show N entries" only hides rows via CSS — all <tr> are present.
+        table = soup.select_one("table.posts-data-table")
+        if not table:
+            # Fallback: try any table with recognisable trustee-sale columns
+            table = soup.find("table")
+
+        if not table:
+            logger.warning("ClearRecon: no table found in page HTML")
             return properties
 
-        logger.info(f"Found {len(rows)} rows on Clear Recon WA page")
+        rows = table.select("tbody tr")
+        logger.info(f"ClearRecon: found {len(rows)} raw rows")
 
         for row in rows:
             try:
-                # Check for "Spokane" before digging into columns
-                row_text = await row.inner_text()
-                if "Spokane" not in row_text and "SPOKANE" not in row_text.upper():
+                row_text = row.get_text(" ", strip=True)
+                if "spokane" not in row_text.lower():
                     continue
 
-                cells = await row.query_selector_all('td')
+                cells = row.find_all("td")
                 if len(cells) < 5:
                     continue
 
-                # DataTables puts the TS Number in column 0, Address in 1, Date in 2, Time in 3, Location in 4
-                tsn = (await cells[0].inner_text()).strip()
-                address_full = (await cells[1].inner_text()).strip()
-                sale_date = (await cells[2].inner_text()).strip()
-                sale_time = (await cells[3].inner_text()).strip()
-                
-                # Try to extract a clean address and city from the combined address string
-                # E.g. "8525 N Weipert Dr, Spokane WA, 99208"
-                parts = address_full.split(',')
-                address = parts[0].strip() if len(parts) > 0 else address_full
-                
+                tsn = cells[0].get_text(strip=True)
+                address_full = cells[1].get_text(strip=True)
+                sale_date = cells[2].get_text(strip=True)
+                sale_time = cells[3].get_text(strip=True)
+
+                # Parse "8525 N Weipert Dr, Spokane WA, 99208" style
+                parts = [p.strip() for p in address_full.split(",")]
+                address = parts[0] if parts else address_full
+
                 city = "Spokane"
                 if len(parts) > 1:
                     city_part = parts[1].strip()
                     if city_part.upper().endswith("WA"):
-                         city = city_part[:-2].strip()
+                        city = city_part[:-2].strip()
                     else:
-                         city = city_part
-                
-                # Check city again just to be safe, or if it says Spokane Valley
-                if "SPOKANE" in address_full.upper():
-                    if "SPOKANE VALLEY" in address_full.upper():
-                        city = "Spokane Valley"
-                    else:
-                        city = "Spokane"
+                        city = city_part
+                if "SPOKANE VALLEY" in address_full.upper():
+                    city = "Spokane Valley"
+                elif "SPOKANE" in address_full.upper():
+                    city = "Spokane"
 
-                # Look for a detail link (maybe in TS Number cell)
+                # Grab detail URL from TSN cell link if present
                 source_url = self.base_url
-                link = await cells[0].query_selector('a')
-                if link:
-                    href = await link.get_attribute('href')
-                    if href:
-                        source_url = href if href.startswith('http') else f"https://clearrecon-wa.com{href}"
+                link = cells[0].find("a")
+                if link and link.get("href"):
+                    href = link["href"]
+                    source_url = href if href.startswith("http") else f"https://clearrecon-wa.com{href}"
 
                 if tsn and address:
                     properties.append({
@@ -105,7 +124,7 @@ class ClearReconScraper(BaseScraper):
                         "address": address,
                         "city": city,
                         "county": "Spokane",
-                        "zip_code": "",
+                        "zip_code": parts[2].strip() if len(parts) > 2 else "",
                         "auction_date": sale_date,
                         "auction_time": sale_time,
                         "starting_bid": 0.0,
@@ -113,8 +132,8 @@ class ClearReconScraper(BaseScraper):
                         "source_url": source_url,
                     })
             except Exception as e:
-                logger.warning(f"Clear Recon row error: {e}")
+                logger.warning(f"ClearRecon row error: {e}")
                 continue
 
-        logger.info(f"Clear Recon WA: scraped {len(properties)} Spokane properties")
+        logger.info(f"ClearRecon WA: scraped {len(properties)} Spokane properties")
         return properties

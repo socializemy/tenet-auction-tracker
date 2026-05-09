@@ -1,10 +1,10 @@
 fastapi
 uvicorn[standard]
-python-multipart
 sqlalchemy
 playwright
 pydantic
 requests
+httpx[socks]
 python-dotenv
 apscheduler
 tzlocal
