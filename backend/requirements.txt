@@ -5,6 +5,7 @@ playwright
 pydantic
 requests
 httpx[socks]
+python-multipart
 python-dotenv
 apscheduler
 tzlocal
