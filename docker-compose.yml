@@ -14,6 +14,8 @@ services:
       - ./backend/data:/app/data
       # Persist team-uploaded property photos across container rebuilds
       - ./backend/property_photos:/app/property_photos
+      # Persist cached Street View images across container rebuilds
+      - ./backend/streetview_cache:/app/streetview_cache
     restart: unless-stopped
 
   frontend:
