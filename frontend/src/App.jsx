@@ -15,8 +15,9 @@ function App() {
   const [scrapeMsg, setScrapeMsg] = useState('');
   const [progressPercent, setProgressPercent] = useState(0);
 
-  // View mode: 'split' (default) | 'list' | 'grid'
-  const [viewMode, setViewMode] = useState('split');
+  // View mode: 'split' (default on desktop) | 'list' | 'grid'
+  // Default to 'grid' on mobile since split view doesn't work on small screens
+  const [viewMode, setViewMode] = useState(() => window.innerWidth < 768 ? 'grid' : 'split');
 
   const [filters, setFilters] = useState({
     county: '',
@@ -128,10 +129,12 @@ function App() {
     return result;
   }, [filteredProperties, listFilters]);
 
+  const isMobile = window.innerWidth < 768;
+
   const VIEW_TABS = [
-    { id: 'split', label: 'Split',  Icon: PanelLeft,   title: 'Split view — cards + map' },
-    { id: 'list',  label: 'List',   Icon: List,         title: 'List view — sortable table' },
-    { id: 'grid',  label: 'Grid',   Icon: LayoutGrid,   title: 'Grid view — 3-column cards' },
+    ...(!isMobile ? [{ id: 'split', label: 'Split', Icon: PanelLeft, title: 'Split view — cards + map' }] : []),
+    { id: 'list',  label: 'List',  Icon: List,       title: 'List view — sortable table' },
+    { id: 'grid',  label: 'Grid',  Icon: LayoutGrid, title: 'Grid view — 3-column cards' },
   ];
 
   return (
@@ -151,7 +154,7 @@ function App() {
           </div>
           <span>TENET <span className="text-gradient">AUCTION </span>TRACKER</span>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '60%' }}>
+        <div className="header-source-links" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end', maxWidth: '60%' }}>
           <a href="https://search.nationwideposting.com/SearchTerms.aspx" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--font-body)' }}>Nationwide Posting ↗</a>
           <a href="https://www.qualityloan.com/QLSPortal/PagesPublic/Login.aspx" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--font-body)' }}>Quality Loan ↗</a>
           <a href="https://clearrecon-wa.com/washington-listings/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)', fontSize: '0.75rem', textDecoration: 'none', fontFamily: 'var(--font-body)' }}>Clear Recon WA ↗</a>

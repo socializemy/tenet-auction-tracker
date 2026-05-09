@@ -162,6 +162,7 @@ const PropertyModal = ({ property: prop, onClose }) => {
     return (
         <div
             onClick={onClose}
+            className="property-modal-overlay"
             style={{
                 position: 'fixed', inset: 0, zIndex: 1000,
                 background: 'rgba(0,0,0,0.6)',
@@ -172,6 +173,7 @@ const PropertyModal = ({ property: prop, onClose }) => {
         >
             <div
                 onClick={e => e.stopPropagation()}
+                className="property-modal-panel"
                 style={{
                     background: 'var(--bg-primary)',
                     border: '1px solid var(--border-color)',
@@ -201,7 +203,7 @@ const PropertyModal = ({ property: prop, onClose }) => {
                 )}
 
                 {/* Header */}
-                <div style={{
+                <div className="modal-header-section" style={{
                     padding: '2rem 2rem 1rem',
                     borderBottom: '2px solid var(--accent-primary)',
                     marginBottom: '1.5rem',
@@ -228,7 +230,7 @@ const PropertyModal = ({ property: prop, onClose }) => {
                 </div>
 
                 {/* Content grid */}
-                <div style={{ padding: '0 2rem 2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem 2rem' }}>
+                <div className="modal-content-grid" style={{ padding: '0 2rem 2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem 2rem' }}>
 
                     {/* Auction Date */}
                     <div>
