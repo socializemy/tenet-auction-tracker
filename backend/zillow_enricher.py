@@ -32,35 +32,99 @@ _BROWSER_HEADERS = {
 }
 
 
+import image_cache
+
+try:
+    from curl_cffi import requests as cffi_requests
+    _CFFI_AVAILABLE = True
+except ImportError:
+    _CFFI_AVAILABLE = False
+
+
+def _http_get(url: str, headers: dict = None, timeout: int = 12):
+    """GET with curl_cffi (Chrome TLS impersonation) falling back to plain requests."""
+    if _CFFI_AVAILABLE:
+        return cffi_requests.get(url, impersonate="chrome124", timeout=timeout)
+    return requests.get(url, headers=headers or _BROWSER_HEADERS, timeout=timeout)
+
+
 def _fetch_zillow_photo(zillow_url: str, address: str, city: str, state: str = "WA") -> Optional[str]:
     """
-    Try to extract the og:image from a Zillow listing page and cache it locally.
-    Returns the local /api/streetview/... URL on success, None on failure.
+    Fetch og:image from a Zillow listing page using Chrome TLS impersonation,
+    cache it locally, return the /api/streetview/... URL on success.
     """
     if not zillow_url:
         return None
     try:
-        resp = requests.get(zillow_url, headers=_BROWSER_HEADERS, timeout=12)
+        resp = _http_get(zillow_url)
         if resp.status_code != 200:
+            logger.debug(f"Zillow HTTP {resp.status_code} for '{address}'")
             return None
         soup = BeautifulSoup(resp.text, "html.parser")
-        og = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
-        if not og:
-            return None
-        img_url = og.get("content", "")
+        # Try og:image first, then zillowstatic CDN URLs embedded in the page
+        og = soup.find("meta", property="og:image")
+        img_url = og.get("content", "") if og else ""
+        if not img_url:
+            matches = re.findall(
+                r'https://photos\.zillowstatic\.com/fp/[^"\'<>\s]+\.(?:jpg|jpeg|png|webp)',
+                resp.text
+            )
+            img_url = matches[0] if matches else ""
         if not img_url or not img_url.startswith("http"):
             return None
-        img_resp = requests.get(img_url, headers=_BROWSER_HEADERS, timeout=12)
-        if img_resp.status_code != 200 or not img_resp.headers.get("content-type", "").startswith("image/"):
-            return None
-        addr_hash = hashlib.md5(f"{address},{city},{state}".lower().encode()).hexdigest()[:16]
-        cache_file = os.path.join(STREETVIEW_DIR, f"zillow_{addr_hash}.jpg")
-        with open(cache_file, "wb") as f:
-            f.write(img_resp.content)
-        return f"/api/streetview/zillow_{addr_hash}.jpg"
+        return image_cache.download_and_cache(img_url, "zillow", address, city, state)
     except Exception as e:
         logger.debug(f"Zillow photo fetch failed for '{address}': {e}")
         return None
+
+
+def _fetch_realtor_photo(address: str, city: str, state: str = "WA") -> Optional[str]:
+    """
+    Search DuckDuckGo for a Realtor.com listing, fetch its og:image,
+    cache it locally, return the /api/streetview/... URL on success.
+    """
+    query = f'"{address}" {city} {state} site:realtor.com'.replace(" ", "+")
+    ddg_url = f"https://html.duckduckgo.com/html/?q={query}"
+    try:
+        req = requests.get(
+            ddg_url,
+            headers={"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"},
+            timeout=10,
+        )
+        soup = BeautifulSoup(req.text, "html.parser")
+        for res in soup.find_all("div", class_="result"):
+            url_el = res.find("a", class_="result__url")
+            if not url_el:
+                continue
+            display = url_el.get_text(strip=True)
+            if "realtor.com" not in display:
+                continue
+            # Reconstruct full URL from the display text
+            if not display.startswith("http"):
+                display = "https://" + display.lstrip("/")
+            try:
+                page_resp = _http_get(display)
+                if page_resp.status_code != 200:
+                    continue
+                pg_soup = BeautifulSoup(page_resp.text, "html.parser")
+                og = pg_soup.find("meta", property="og:image")
+                img_url = og.get("content", "") if og else ""
+                # Also try rdcpix CDN URLs embedded in the page
+                if not img_url:
+                    matches = re.findall(
+                        r'https://ap\.rdcpix\.com/[^"\'<>\s]+\.(?:jpg|jpeg|png|webp)',
+                        page_resp.text
+                    )
+                    img_url = matches[0] if matches else ""
+                if img_url and img_url.startswith("http"):
+                    local = image_cache.download_and_cache(img_url, "realtor", address, city, state)
+                    if local:
+                        return local
+            except Exception:
+                continue
+    except Exception as e:
+        logger.debug(f"Realtor.com photo fetch failed for '{address}': {e}")
+    return None
 
 
 async def _fetch_property_data(address: str, city: str = "Spokane", state: str = "WA", fetch_estimate: bool = True, fetch_image: bool = True, fetch_apn: bool = True, zillow_url: Optional[str] = None) -> Dict:
@@ -72,12 +136,18 @@ async def _fetch_property_data(address: str, city: str = "Spokane", state: str =
         "year_built": None, "apn": None
     }
 
-    # 0. Try Zillow listing photo first (og:image from the Zillow page)
-    if fetch_image and zillow_url:
-        zillow_photo = await asyncio.to_thread(_fetch_zillow_photo, zillow_url, address, city, state)
-        if zillow_photo:
-            result["zillow_photo_url"] = zillow_photo
-            logger.info(f"Zillow photo cached for {address} → {zillow_photo}")
+    # 0. Listing photo: try Zillow (curl_cffi TLS impersonation) then Realtor.com via DDG
+    if fetch_image:
+        if zillow_url:
+            zillow_photo = await asyncio.to_thread(_fetch_zillow_photo, zillow_url, address, city, state)
+            if zillow_photo:
+                result["zillow_photo_url"] = zillow_photo
+                logger.info(f"Zillow photo cached for {address} → {zillow_photo}")
+        if not result["zillow_photo_url"]:
+            realtor_photo = await asyncio.to_thread(_fetch_realtor_photo, address, city, state)
+            if realtor_photo:
+                result["zillow_photo_url"] = realtor_photo
+                logger.info(f"Realtor.com photo cached for {address} → {realtor_photo}")
 
     # 1. Fetch Property Value Estimate using DuckDuckGo HTML search
     if fetch_estimate:

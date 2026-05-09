@@ -1,7 +1,10 @@
+import asyncio
+import re
 from typing import List, Dict, Any
+
+import image_cache
 from scrapers.base import BaseScraper
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +63,15 @@ class XomeScraper(BaseScraper):
                 date_el = await card.query_selector('[class*="date"], [class*="Date"]')
                 auction_date = (await date_el.inner_text()).strip() if date_el else ""
 
-                # Image URL
+                # Image URL — download and cache immediately so the CDN URL never expires
                 img_el = await card.query_selector('img')
                 image_url = (await img_el.get_attribute('src') or "") if img_el else ""
+                if image_url and image_url.startswith("http") and address:
+                    cached = await asyncio.to_thread(
+                        image_cache.download_and_cache, image_url, "xome", address, city
+                    )
+                    if cached:
+                        image_url = cached
 
                 # Property Link
                 # Sometimes the card itself is an anchor tag, sometimes it contains one.

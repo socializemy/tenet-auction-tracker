@@ -10,3 +10,4 @@ python-dotenv
 apscheduler
 tzlocal
 beautifulsoup4
+curl-cffi
