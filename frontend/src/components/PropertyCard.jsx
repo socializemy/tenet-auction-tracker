@@ -30,11 +30,23 @@ const PropertyCard = ({ property, onClick }) => {
 
     const { pillText, bottomDate } = formatAuctionDateInfo(property.auction_date, property.auction_time);
 
+    const primaryImg = property.zillow_photo_url || property.image_url;
+    const fallbackImg = property.zillow_photo_url ? property.image_url : null;
+    const [imgSrc, setImgSrc] = React.useState(primaryImg);
+    const [imgFailed, setImgFailed] = React.useState(false);
+    const handleImgError = () => {
+        if (fallbackImg && imgSrc !== fallbackImg) {
+            setImgSrc(fallbackImg);
+        } else {
+            setImgFailed(true);
+        }
+    };
+
     return (
         <div className="property-card" onClick={() => onClick && onClick(property)}>
             <div className="property-card-image">
-                {property.image_url ? (
-                    <img src={property.image_url} alt={property.address} loading="lazy" />
+                {!imgFailed && primaryImg ? (
+                    <img src={imgSrc} alt={property.address} loading="lazy" onError={handleImgError} />
                 ) : (
                     <div className="image-placeholder">
                         <Home size={32} opacity={0.3} />

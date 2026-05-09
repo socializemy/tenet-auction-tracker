@@ -72,6 +72,7 @@ class PropertyResponse(BaseModel):
     status: str
     zillow_url: Optional[str]
     image_url: Optional[str]
+    zillow_photo_url: Optional[str] = None
     bedrooms: Optional[float]
     bathrooms: Optional[float]
     square_feet: Optional[int]

@@ -61,13 +61,14 @@ const PropertyModal = ({ property: prop, onClose }) => {
 
     const { pillText, bottomDate } = formatAuctionDateInfo(prop.auction_date, prop.auction_time);
 
-    // Hero image fallback chain: scraped image → Street View proxy → hidden
-    const streetViewSrc = `/api/street-view/${prop.id}`;
-    const [heroSrc, setHeroSrc] = useState(prop.image_url || streetViewSrc);
-    const [heroFailed, setHeroFailed] = useState(false);
+    // Hero image fallback chain: Zillow photo → Street View → hidden
+    const primaryHero = prop.zillow_photo_url || prop.image_url;
+    const fallbackHero = prop.zillow_photo_url ? prop.image_url : null;
+    const [heroSrc, setHeroSrc] = useState(primaryHero);
+    const [heroFailed, setHeroFailed] = useState(!primaryHero);
     const handleHeroError = () => {
-        if (heroSrc !== streetViewSrc) {
-            setHeroSrc(streetViewSrc);
+        if (fallbackHero && heroSrc !== fallbackHero) {
+            setHeroSrc(fallbackHero);
         } else {
             setHeroFailed(true);
         }

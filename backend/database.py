@@ -45,6 +45,7 @@ class Property(Base):
     status = Column(String, default="Active")
     zillow_url = Column(String, nullable=True)
     image_url = Column(String, nullable=True)
+    zillow_photo_url = Column(String, nullable=True)
     # Spokane County SCOUT assessor data
     assessed_value    = Column(Integer, nullable=True)   # total market value (current year)
     assessed_land     = Column(Integer, nullable=True)   # land portion only
@@ -119,6 +120,7 @@ def _migrate_add_columns():
         ("scout_sales",        "TEXT"),
         ("scout_permits",      "TEXT"),
         ("scout_fetched_at",   "TEXT"),
+        ("zillow_photo_url",   "TEXT"),
     ]
     import sqlite3
     db_path = DATABASE_URL.replace("sqlite:///", "")

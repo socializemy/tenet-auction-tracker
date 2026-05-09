@@ -21,13 +21,63 @@ os.makedirs(STREETVIEW_DIR, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 
+_BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
+
+
+def _fetch_zillow_photo(zillow_url: str, address: str, city: str, state: str = "WA") -> Optional[str]:
+    """
+    Try to extract the og:image from a Zillow listing page and cache it locally.
+    Returns the local /api/streetview/... URL on success, None on failure.
+    """
+    if not zillow_url:
+        return None
+    try:
+        resp = requests.get(zillow_url, headers=_BROWSER_HEADERS, timeout=12)
+        if resp.status_code != 200:
+            return None
+        soup = BeautifulSoup(resp.text, "html.parser")
+        og = soup.find("meta", property="og:image") or soup.find("meta", attrs={"name": "og:image"})
+        if not og:
+            return None
+        img_url = og.get("content", "")
+        if not img_url or not img_url.startswith("http"):
+            return None
+        img_resp = requests.get(img_url, headers=_BROWSER_HEADERS, timeout=12)
+        if img_resp.status_code != 200 or not img_resp.headers.get("content-type", "").startswith("image/"):
+            return None
+        addr_hash = hashlib.md5(f"{address},{city},{state}".lower().encode()).hexdigest()[:16]
+        cache_file = os.path.join(STREETVIEW_DIR, f"zillow_{addr_hash}.jpg")
+        with open(cache_file, "wb") as f:
+            f.write(img_resp.content)
+        return f"/api/streetview/zillow_{addr_hash}.jpg"
+    except Exception as e:
+        logger.debug(f"Zillow photo fetch failed for '{address}': {e}")
+        return None
+
+
 async def _fetch_property_data(address: str, city: str = "Spokane", state: str = "WA", fetch_estimate: bool = True, fetch_image: bool = True, fetch_apn: bool = True, zillow_url: Optional[str] = None) -> Dict:
-    """Returns dict with image_url, estimated_value, and extended property details."""
+    """Returns dict with zillow_photo_url, image_url, estimated_value, and extended property details."""
     result = {
-        "image_url": None, "zillow_url": zillow_url, "estimated_value": None,
-        "bedrooms": None, "bathrooms": None, "square_feet": None,
-        "lot_size": None, "property_type": None, "year_built": None, "apn": None
+        "zillow_photo_url": None, "image_url": None, "zillow_url": zillow_url,
+        "estimated_value": None, "bedrooms": None, "bathrooms": None,
+        "square_feet": None, "lot_size": None, "property_type": None,
+        "year_built": None, "apn": None
     }
+
+    # 0. Try Zillow listing photo first (og:image from the Zillow page)
+    if fetch_image and zillow_url:
+        zillow_photo = await asyncio.to_thread(_fetch_zillow_photo, zillow_url, address, city, state)
+        if zillow_photo:
+            result["zillow_photo_url"] = zillow_photo
+            logger.info(f"Zillow photo cached for {address} → {zillow_photo}")
 
     # 1. Fetch Property Value Estimate using DuckDuckGo HTML search
     if fetch_estimate:
@@ -411,7 +461,7 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
         if status_dict is not None:
             status_dict["status_text"] = f"Enriching Data ({idx+1}/{total}): {prop.address}"
             
-        needs_image = not prop.image_url
+        needs_image = not prop.image_url or not prop.zillow_photo_url
         needs_estimate = not prop.estimated_value or not prop.bedrooms or not prop.bathrooms or not prop.square_feet or not prop.year_built or not prop.property_type or not prop.lot_size
         needs_apn = not prop.apn
         needs_scout = prop.apn and not prop.scout_fetched_at
@@ -421,6 +471,10 @@ async def enrich_properties_zillow(db_session, properties_to_enrich, status_dict
 
         data = await _fetch_property_data(prop.address, prop.city, fetch_estimate=needs_estimate, fetch_image=needs_image, fetch_apn=needs_apn, zillow_url=prop.zillow_url)
         changed = False
+
+        if data.get("zillow_photo_url") and not prop.zillow_photo_url:
+            prop.zillow_photo_url = data["zillow_photo_url"]
+            changed = True
 
         if data.get("image_url") and not prop.image_url:
             prop.image_url = data["image_url"]
