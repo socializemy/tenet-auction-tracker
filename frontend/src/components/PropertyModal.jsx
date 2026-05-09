@@ -61,6 +61,18 @@ const PropertyModal = ({ property: prop, onClose }) => {
 
     const { pillText, bottomDate } = formatAuctionDateInfo(prop.auction_date, prop.auction_time);
 
+    // Hero image fallback chain: scraped image → Street View proxy → hidden
+    const streetViewSrc = `/api/street-view/${prop.id}`;
+    const [heroSrc, setHeroSrc] = useState(prop.image_url || streetViewSrc);
+    const [heroFailed, setHeroFailed] = useState(false);
+    const handleHeroError = () => {
+        if (heroSrc !== streetViewSrc) {
+            setHeroSrc(streetViewSrc);
+        } else {
+            setHeroFailed(true);
+        }
+    };
+
     // Deal metrics
     const bidRatio = computeBidRatio(prop.starting_bid, prop.estimated_value);
     const ratioColor = bidRatioColor(bidRatio);
@@ -172,14 +184,14 @@ const PropertyModal = ({ property: prop, onClose }) => {
                 }}
             >
                 {/* Hero Image */}
-                {prop.image_url && (
+                {!heroFailed && (
                     <div style={{ width: '100%', height: '240px', overflow: 'hidden', position: 'relative' }}>
                         <img
-                            src={prop.image_url}
+                            src={heroSrc}
                             alt={prop.address}
                             loading="lazy"
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={e => { e.target.style.display = 'none'; }}
+                            onError={handleHeroError}
                         />
                         <div style={{
                             position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
