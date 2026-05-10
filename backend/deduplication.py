@@ -38,11 +38,29 @@ def parse_date(date_str: str) -> str:
     """Try to parse a date string, return ISO format YYYY-MM-DD or raw string."""
     if not date_str:
         return ""
+    s = date_str.strip()
+
+    # Standard formats
     for fmt in ("%m/%d/%Y", "%Y-%m-%d", "%m-%d-%Y", "%B %d, %Y", "%b %d, %Y"):
         try:
-            return datetime.strptime(date_str.strip(), fmt).strftime("%Y-%m-%d")
+            return datetime.strptime(s, fmt).strftime("%Y-%m-%d")
         except ValueError:
             pass
+
+    # Range format: "May 09 - May 11" → take start date, infer year
+    if " - " in s:
+        s = s.split(" - ")[0].strip()
+
+    # "Aug 28, 10:00 AM" or "May 09" — strip time, infer year
+    import re as _re
+    m = _re.match(r'^([A-Za-z]+ \d+)(?:,\s*\d+:\d+.*)?$', s)
+    if m:
+        for yr in (datetime.utcnow().year, datetime.utcnow().year + 1):
+            try:
+                return datetime.strptime(f"{m.group(1)} {yr}", "%b %d %Y").strftime("%Y-%m-%d")
+            except ValueError:
+                pass
+
     return date_str.strip()
 
 

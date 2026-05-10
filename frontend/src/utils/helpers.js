@@ -48,6 +48,46 @@ export const bidRatioColor = (ratioStr) => {
     return '#dc2626';
 };
 
+/**
+ * Parses any known auction date format into a JS Date for sorting.
+ * Handles: YYYY-MM-DD, "Aug 28, 10:00 AM", "May 09 - May 11"
+ * Returns far-future date for unparseable values so they sort last.
+ */
+export const parseAuctionDate = (dateStr) => {
+    if (!dateStr) return new Date('9999-12-31');
+    const now = new Date();
+    const thisYear = now.getFullYear();
+
+    // ISO: YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return new Date(dateStr + 'T00:00:00');
+    }
+
+    // Range: "May 09 - May 11" — take start date
+    if (dateStr.includes(' - ')) {
+        const start = dateStr.split(' - ')[0].trim();
+        const d = new Date(`${start}, ${thisYear}`);
+        if (!isNaN(d)) {
+            if (d < now) d.setFullYear(thisYear + 1);
+            return d;
+        }
+    }
+
+    // "Aug 28, 10:00 AM" — strip time, infer year
+    const withTime = dateStr.match(/^([A-Za-z]+ \d+),\s*\d+:\d+/);
+    if (withTime) {
+        const d = new Date(`${withTime[1]}, ${thisYear}`);
+        if (!isNaN(d)) {
+            if (d < now) d.setFullYear(thisYear + 1);
+            return d;
+        }
+    }
+
+    // Native fallback
+    const d = new Date(dateStr);
+    return isNaN(d) ? new Date('9999-12-31') : d;
+};
+
 export const formatAuctionDateInfo = (dateString, timeString) => {
     if (!dateString) return { pillText: null, bottomDate: 'TBD' };
 

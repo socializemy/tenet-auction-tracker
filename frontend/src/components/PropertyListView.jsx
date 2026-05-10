@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { formatAuctionDateInfo, computeBidRatio, bidRatioColor } from '../utils/helpers';
+import { formatAuctionDateInfo, computeBidRatio, bidRatioColor, parseAuctionDate } from '../utils/helpers';
 
 const SOURCE_SHORT = {
     "Nationwide Posting": "Nationwide",
@@ -88,7 +88,7 @@ const PropertyListView = ({ properties, loading, onPropertySelect }) => {
         const arr = [...properties];
         arr.sort((a, b) => {
             let av, bv;
-            if (sort.col === 'auction_date') { av = a.auction_date || ''; bv = b.auction_date || ''; }
+            if (sort.col === 'auction_date') { av = parseAuctionDate(a.auction_date); bv = parseAuctionDate(b.auction_date); }
             else if (sort.col === 'starting_bid') { av = a.starting_bid || 0; bv = b.starting_bid || 0; }
             else if (sort.col === 'estimated_value') { av = a.estimated_value || 0; bv = b.estimated_value || 0; }
             else if (sort.col === 'address') { av = a.address || ''; bv = b.address || ''; }

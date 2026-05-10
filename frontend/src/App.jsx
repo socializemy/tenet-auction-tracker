@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchProperties, triggerScrape, fetchScrapeStatus, exportCsv } from './utils/api';
+import { parseAuctionDate } from './utils/helpers';
 import { Search, PanelLeft, List, LayoutGrid } from 'lucide-react';
 import PropertyList from './components/PropertyList';
 import PropertyCard from './components/PropertyCard';
@@ -126,11 +127,7 @@ function App() {
     if (listFilters.minBeds) {
       result = result.filter(p => (p.bedrooms || 0) >= parseInt(listFilters.minBeds));
     }
-    result = [...result].sort((a, b) => {
-      const da = a.auction_date ? new Date(a.auction_date) : new Date('9999-12-31');
-      const db = b.auction_date ? new Date(b.auction_date) : new Date('9999-12-31');
-      return da - db;
-    });
+    result = [...result].sort((a, b) => parseAuctionDate(a.auction_date) - parseAuctionDate(b.auction_date));
     return result;
   }, [filteredProperties, listFilters]);
 
