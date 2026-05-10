@@ -126,6 +126,11 @@ function App() {
     if (listFilters.minBeds) {
       result = result.filter(p => (p.bedrooms || 0) >= parseInt(listFilters.minBeds));
     }
+    result = [...result].sort((a, b) => {
+      const da = a.auction_date ? new Date(a.auction_date) : new Date('9999-12-31');
+      const db = b.auction_date ? new Date(b.auction_date) : new Date('9999-12-31');
+      return da - db;
+    });
     return result;
   }, [filteredProperties, listFilters]);
 
