@@ -60,6 +60,11 @@ def upsert_properties(db: Session, scraped: List[Dict[str, Any]]) -> Dict[str, i
     """
     stats = {"inserted": 0, "updated": 0, "merged_sources": 0}
 
+    # Track fingerprints seen in this batch so within-run duplicates are caught
+    # even before the session is flushed (session uses autoflush=False).
+    seen_fingerprints: dict[str, Property] = {}
+    seen_tsns: dict[str, Property] = {}
+
     for prop in scraped:
         if not prop.get("address"):
             continue
@@ -72,11 +77,18 @@ def upsert_properties(db: Session, scraped: List[Dict[str, Any]]) -> Dict[str, i
         # --- Try to find existing record ---
         existing: Property | None = None
 
-        if tsn:
+        # 1. Check in-batch memory first (catches duplicates within the same scrape run
+        #    before the session has been flushed to the DB)
+        if tsn and tsn in seen_tsns:
+            existing = seen_tsns[tsn]
+        if not existing and fp in seen_fingerprints:
+            existing = seen_fingerprints[fp]
+
+        # 2. Fall back to DB lookup
+        if not existing and tsn:
             existing = db.query(Property).filter(Property.tsn == tsn).first()
 
         if not existing:
-            # Match by fingerprint: check all existing records
             all_props = db.query(Property).all()
             for p in all_props:
                 p_fp = fingerprint({
@@ -130,6 +142,11 @@ def upsert_properties(db: Session, scraped: List[Dict[str, Any]]) -> Dict[str, i
             else:
                 stats["updated"] += 1
 
+            # Keep in-batch memory up to date
+            seen_fingerprints[fp] = existing
+            if tsn:
+                seen_tsns[tsn] = existing
+
         else:
             # Insert new record
             new_prop = Property(
@@ -150,6 +167,11 @@ def upsert_properties(db: Session, scraped: List[Dict[str, Any]]) -> Dict[str, i
             )
             db.add(new_prop)
             stats["inserted"] += 1
+
+            # Register in in-batch memory so subsequent duplicates find this record
+            seen_fingerprints[fp] = new_prop
+            if tsn:
+                seen_tsns[tsn] = new_prop
 
     db.commit()
     logger.info(f"Dedup complete: {stats}")
