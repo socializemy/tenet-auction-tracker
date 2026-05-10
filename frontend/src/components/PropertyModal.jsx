@@ -5,6 +5,7 @@ import {
     getStreetViewUrl,
     computeBidRatio,
     bidRatioColor,
+    effectiveStatus,
 } from '../utils/helpers';
 import { fetchNotes, addNote, deleteNote, fetchPhotos, uploadPhoto, deletePhoto } from '../utils/api';
 
@@ -247,9 +248,12 @@ const PropertyModal = ({ property: prop, onClose }) => {
                     {/* Status */}
                     <div>
                         <div className="text-muted" style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.3rem' }}>Status</div>
-                        <span className={`status-badge ${(prop.status || '').toLowerCase().includes('postpone') ? 'postponed' : ''} ${(prop.status || '').toLowerCase().includes('cancel') ? 'canceled' : ''}`}>
-                            {prop.status || 'Active'}
-                        </span>
+                        {(() => {
+                            const s = effectiveStatus(prop.status, prop.auction_date);
+                            const lower = s.toLowerCase();
+                            const cls = `status-badge${lower.includes('postpone') ? ' postponed' : lower.includes('cancel') ? ' canceled' : ''}`;
+                            return <span className={cls}>{s}</span>;
+                        })()}
                     </div>
 
                     {/* Opening Bid */}

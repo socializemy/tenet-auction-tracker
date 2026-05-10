@@ -1,7 +1,7 @@
 import React from 'react';
 import { MapPin, Calendar, Tag, Home, Bed, Bath, Square } from 'lucide-react';
 
-import { formatAuctionDateInfo } from '../utils/helpers';
+import { formatAuctionDateInfo, effectiveStatus } from '../utils/helpers';
 
 const SOURCE_COLORS = {
     "Nationwide Posting": "#2563EB",
@@ -54,7 +54,7 @@ const PropertyCard = ({ property, onClick }) => {
                     </div>
                 )}
                 <div className="status-overlay">
-                    <StatusBadge status={property.status} />
+                    <StatusBadge status={effectiveStatus(property.status, property.auction_date)} />
                 </div>
             </div>
 

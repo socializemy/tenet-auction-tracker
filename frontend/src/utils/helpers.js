@@ -88,6 +88,17 @@ export const parseAuctionDate = (dateStr) => {
     return isNaN(d) ? new Date('9999-12-31') : d;
 };
 
+/**
+ * Returns the effective status for display.
+ * If the scraper left it as "Active" but the auction date has passed, return "Ended".
+ */
+export const effectiveStatus = (status, auctionDate) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('postpone') || s.includes('cancel') || s.includes('end')) return status;
+    if (auctionDate && parseAuctionDate(auctionDate) < new Date()) return 'Ended';
+    return status || 'Active';
+};
+
 export const formatAuctionDateInfo = (dateString, timeString) => {
     if (!dateString) return { pillText: null, bottomDate: 'TBD' };
 

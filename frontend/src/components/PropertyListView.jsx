@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { formatAuctionDateInfo, computeBidRatio, bidRatioColor, parseAuctionDate } from '../utils/helpers';
+import { formatAuctionDateInfo, computeBidRatio, bidRatioColor, parseAuctionDate, effectiveStatus } from '../utils/helpers';
 
 const SOURCE_SHORT = {
     "Nationwide Posting": "Nationwide",
@@ -130,6 +130,7 @@ const PropertyListView = ({ properties, loading, onPropertySelect }) => {
                 <tbody>
                     {sorted.map((prop, idx) => {
                         const { bottomDate, pillText } = formatAuctionDateInfo(prop.auction_date, prop.auction_time);
+                        const status = effectiveStatus(prop.status, prop.auction_date);
                         const bidRatio = computeBidRatio(prop.starting_bid, prop.estimated_value);
                         const ratioColor = bidRatioColor(bidRatio);
                         let sourcesList = [];
@@ -166,7 +167,7 @@ const PropertyListView = ({ properties, loading, onPropertySelect }) => {
 
                                 {/* Status */}
                                 <td style={{ padding: '0.5rem 0.75rem', whiteSpace: 'nowrap' }}>
-                                    <RowBadge status={prop.status} />
+                                    <RowBadge status={status} />
                                 </td>
 
                                 {/* Opening Bid */}
